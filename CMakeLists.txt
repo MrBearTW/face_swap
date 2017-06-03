@@ -67,18 +67,7 @@ if(WITH_QT)
 	find_package(Qt5Widgets)
 endif()
 
-# HDF5
-if(MSVC)
-  # Find HDF5 using it's hdf5-config.cmake file with MSVC
-  if(DEFINED HDF5_DIR)
-    list(APPEND CMAKE_MODULE_PATH ${HDF5_DIR})
-  endif()
-  find_package(HDF5 COMPONENTS C HL CXX REQUIRED)
-  set(HDF5_LIBRARIES hdf5-shared hdf5_cpp-shared)
-  set(HDF5_HL_LIBRARIES hdf5_hl-shared)
-else()
-  find_package(HDF5 COMPONENTS HL REQUIRED)
-endif()
+find_package(HDF5 COMPONENTS C HL CXX REQUIRED)
 find_package(HDF5 REQUIRED CXX)
 
 # Eigen
