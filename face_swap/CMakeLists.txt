@@ -36,7 +36,6 @@ target_link_libraries(face_swap PUBLIC
 	${face_segmentation_LIBRARIES}
 	${Caffe_LIBRARIES}
 	${HDF5_LIBRARIES}
-    ${HDF5_CXX_LIBRARIES}
 )
 
 # Installations
