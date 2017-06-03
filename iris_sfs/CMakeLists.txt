@@ -30,6 +30,7 @@ target_include_directories(iris_sfs PUBLIC
 )
 target_link_libraries(iris_sfs PUBLIC
 	cv_gl
+    ${HDF5_CXX_LIBRARIES}
 	${OpenCV_LIBS}
 )
 
