@@ -63,10 +63,8 @@ find_package(dlib REQUIRED)
 find_package(Caffe REQUIRED)
 
 # Qt
-if(WITH_QT)
-	find_package(Qt5Widgets)
-	find_package(Qt5Gui)
-endif()
+find_package(Qt5Widgets REQUIRED)
+find_package(Qt5Gui REQUIRED)
 
 find_package(HDF5 COMPONENTS C HL CXX REQUIRED)
 find_package(HDF5 REQUIRED CXX)
