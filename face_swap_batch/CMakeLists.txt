@@ -7,7 +7,6 @@ target_link_libraries(face_swap_batch PRIVATE
 	face_swap
 	${Boost_LIBRARIES}
 	Qt5::Widgets
-	Qt5::Gui
 )
 
 # Installations
