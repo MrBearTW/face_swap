@@ -2,6 +2,7 @@
 add_executable(face_swap_image face_swap_image.cpp)
 target_include_directories(face_swap_image PRIVATE 
 	${Boost_INCLUDE_DIRS}
+    ${Qt5Widgets_INCLUDE_DIRS}
 )
 target_link_libraries(face_swap_image PRIVATE
 	face_swap
