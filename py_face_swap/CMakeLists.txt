@@ -1,5 +1,5 @@
 # Target
-add_library(pyfaceswap SHARED pyboost_cv3_converter.cpp pyFaceSwap.cpp)
+add_library(pyfaceswap SHARED pyFaceSwap.cpp pyboost_cv3_converter.cpp)
 target_include_directories(pyfaceswap PRIVATE 
 	${OpenCV_INCLUDE_DIRS}
     ${PYTHON_INCLUDE_DIR}

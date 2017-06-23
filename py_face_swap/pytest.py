@@ -1,6 +1,7 @@
-#import pyfaceswap
+import pyfaceswap
 import cv2
 import sys
+import time
 
 def main():
     landmarks = '/data/rudychin/face-swap/data/models/shape_predictor_68_face_landmarks.dat'       # path to landmarks model file
@@ -15,26 +16,37 @@ def main():
     target = '/data/rudychin/face-swap/data/images/795.jpg'  # target image
 
     fs = pyfaceswap.PyFaceSwap()
-    fs.initCtx(len(sys.argv), sys.argv)
+    if( fs.initCtx(len(sys.argv), sys.argv) ):
+        print 'Initialization failed!'
+        return
     fs.loadModels(landmarks, model_3dmm_h5, model_3dmm_dat, reg_model, reg_deploy,\
-            reg_mean, seg_model, seg_deploy, 0, 1, 0)
+            reg_mean, seg_model, seg_deploy, 0, 1, 1)
 
     sourceImg = cv2.imread(source)
     targetImg = cv2.imread(target)
     
     result = []
 
-    cv2.imshow('Image', sourceImg)
-    cv2.waitKey(0)
-    cv2.imshow('Image', targetImg)
-    cv2.waitKey(0)
+    #cv2.imshow('Image', sourceImg)
+    #cv2.waitKey(0)
+    #cv2.imshow('Image', targetImg)
+    #cv2.waitKey(0)
 
-    fs.setSourceImg(sourceImg)
-    fs.setTargetImg(targetImg)
-    fs.swap(result)
+    start = time.time()
+    for _ in range(5):
+        if ( fs.setSourceImg(sourceImg) ):
+            print 'Set Source Image Failed!'
+            return
+        if ( fs.setTargetImg(targetImg) ):
+            print 'Set Target Image Failed!'
+            return
+        result = fs.swap()
+    latency = (time.time() - start) / 5.0
+    print latency
 
-    cv2.imshow('Image', result)
-    cv2.waitKey(0)
+    cv2.imwrite('test.jpg', result)
+
+    del fs
 
 if __name__ == '__main__':
     main()

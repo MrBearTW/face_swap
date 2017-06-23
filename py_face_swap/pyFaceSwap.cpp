@@ -15,15 +15,30 @@
 #include <QOpenGLContext>
 #include <QOffscreenSurface>
 
-#include <Python.h>
+#include <iostream>
+
+#include <boost/python.hpp>
 #include "pyFaceSwap.hpp"
-#include "pyboostcvconverter.hpp"
 #include "face_swap/face_swap.h"
 
-//#define PY_ARRAY_UNIQUE_SYMBOL pbcvt_ARRAY_API
+#define PY_ARRAY_UNIQUE_SYMBOL pbcvt_ARRAY_API
+#include "pyboostcvconverter.hpp"
 
 using namespace boost::python;
+using std::cout;
 using std::string;
+
+PyFaceSwap::PyFaceSwap() {
+    import_array();
+}
+
+PyFaceSwap::~PyFaceSwap() {
+    if (fs) delete fs;
+    if (a) delete a;
+    if (surfaceFormat) delete surfaceFormat;
+    if (openGLContext) delete openGLContext;
+    if (surface) delete surface;
+}
 
 int PyFaceSwap::initCtx(int argc, PyObject *arglst) {
 
@@ -40,26 +55,26 @@ int PyFaceSwap::initCtx(int argc, PyObject *arglst) {
     argv[cnt] = NULL;
 
     // Intialize OpenGL context
-    QApplication a(argc, argv);
+    a = new QApplication(argc, argv);
     for (size_t i = 0; i < cnt; i++)
         delete [] argv[i];
     delete [] argv;
 
-    QSurfaceFormat surfaceFormat;
-    surfaceFormat.setMajorVersion(1);
-    surfaceFormat.setMinorVersion(5);
+    surfaceFormat = new QSurfaceFormat;
+    surfaceFormat->setMajorVersion(1);
+    surfaceFormat->setMinorVersion(5);
 
-    QOpenGLContext openGLContext;
-    openGLContext.setFormat(surfaceFormat);
-    openGLContext.create();
-    if (!openGLContext.isValid()) return -1;
+    openGLContext = new QOpenGLContext;
+    openGLContext->setFormat(*surfaceFormat);
+    openGLContext->create();
+    if (!openGLContext->isValid()) return -1;
 
-    QOffscreenSurface surface;
-    surface.setFormat(surfaceFormat);
-    surface.create();
-    if (!surface.isValid()) return -2;
+    surface = new QOffscreenSurface;
+    surface->setFormat(*surfaceFormat);
+    surface->create();
+    if (!surface->isValid()) return -2;
 
-    openGLContext.makeCurrent(&surface);
+    openGLContext->makeCurrent(surface);
 
     // Initialize GLEW
     GLenum err = glewInit();
@@ -81,32 +96,63 @@ void PyFaceSwap::loadModels(string landmarks_path, string model_3dmm_h5_path, st
 }
 
 
-int PyFaceSwap::setSourceImg(PyObject *img) {
+int PyFaceSwap::setSourceImg(PyObject* pyImg) {
     cv::Mat image, source_seg;
-    image = pbcvt::fromNDArrayToMat(img);
+    image = pbcvt::fromNDArrayToMat(pyImg);
+    //cv::imshow("Source", image);
+    //cv::waitKey(0);
     int ret = fs->setSource(image, source_seg);
     if (!ret) return -1;
     return 0;
 }
 
-int PyFaceSwap::setTargetImg(PyObject *img) {
+int PyFaceSwap::setTargetImg(PyObject* pyImg) {
     cv::Mat image, target_seg;
-    image = pbcvt::fromNDArrayToMat(img);
+    image = pbcvt::fromNDArrayToMat(pyImg);
+    //cv::imshow("Target", image);
+    //cv::waitKey(0);
     int ret = fs->setTarget(image, target_seg);
     if (!ret) return -1;
     return 0;
 }
 
-int PyFaceSwap::swap(PyObject *img) {
+PyObject* PyFaceSwap::swap() {
     cv::Mat rendered_img = fs->swap();
-    if (rendered_img.empty()) return -1;
-    img = pbcvt::fromMatToNDArray(rendered_img);
-    return 0;
+    //cv::imshow("Result", rendered_img);
+    //cv::waitKey(0);
+
+    //cv::Mat debug_src_mesh_img = fs->debugSourceMesh();
+    //cv::imshow("Src Mesh", debug_src_mesh_img);
+    //cv::waitKey(0);
+
+    //cv::Mat debug_tgt_mesh_img = fs->debugTargetMesh();
+    //cv::imshow("Tgt Mesh", debug_tgt_mesh_img);
+    //cv::waitKey(0);
+
+    //cv::Mat debug_src_lms_img = fs->debugSourceLandmarks();
+    //cv::imshow("Src Landmarks", debug_src_lms_img);
+    //cv::waitKey(0);
+
+    //cv::Mat debug_tgt_lms_img = fs->debugTargetLandmarks();
+    //cv::imshow("Tgt Landmarks", debug_tgt_lms_img);
+    //cv::waitKey(0);
+    //
+    PyObject *ret = pbcvt::fromMatToNDArray(rendered_img);
+    return ret;
 }
+
+static void init_ar(){
+    Py_Initialize();
+    import_array();
+    return NUMPY_IMPORT_ARRAY_RETVAL;
+}
+
 
 BOOST_PYTHON_MODULE(pyfaceswap)
 {
-    class_<PyFaceSwap>("PyFaceSwap")
+    init_ar();
+    class_<PyFaceSwap>("PyFaceSwap", init<>())
+        .def(init<>())
         .def("initCtx", &PyFaceSwap::initCtx)
         .def("loadModels", &PyFaceSwap::loadModels)
         .def("setSourceImg", &PyFaceSwap::setSourceImg)

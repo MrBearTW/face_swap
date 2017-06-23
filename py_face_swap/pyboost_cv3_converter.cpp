@@ -5,10 +5,10 @@
  *      Author: Gregory Kramida
  *   Copyright: 2015 Gregory Kramida
  */
-//#define NO_IMPORT_ARRAY
-//#define PY_ARRAY_UNIQUE_SYMBOL pbcvt_ARRAY_API
-
+#define NO_IMPORT_ARRAY
+#define PY_ARRAY_UNIQUE_SYMBOL pbcvt_ARRAY_API
 #include "pyboostcvconverter.hpp"
+#if CV_VERSION_MAJOR == 3
 namespace pbcvt {
 using namespace cv;
 //===================   ERROR HANDLING     =========================================================
@@ -424,3 +424,4 @@ void matFromNDArrayBoostConverter::construct(PyObject* object,
 }
 
 }			//end namespace pbcvt
+#endif
