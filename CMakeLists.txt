@@ -25,7 +25,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Optional 3rd party components
 # ===================================================
-option(WITH_BOOST_STATIC "Boost static libraries" ON)
+option(WITH_BOOST_STATIC "Boost static libraries" OFF)
 option(WITH_QT "Qt" ON)
 
 # Build components
@@ -36,8 +36,8 @@ option(BUILD_DOCS "Build documentation using Doxygen" ON)
 # ===================================================
 
 # Boost
-set(Boost_USE_STATIC_LIBS ${WITH_BOOST_STATIC})
-set(BOOST_ALL_DYN_LINK NOT ${WITH_BOOST_STATIC})
+#set(Boost_USE_STATIC_LIBS ${WITH_BOOST_STATIC})
+#set(BOOST_ALL_DYN_LINK NOT ${WITH_BOOST_STATIC})
 if(WIN32)
 	if(${WITH_BOOST_STATIC})
 		add_definitions(-DBOOST_ALL_NO_LIB)
@@ -81,6 +81,9 @@ find_package(GLEW REQUIRED)
 # Doxygen
 find_package(Doxygen)
 
+# Python
+find_package(PythonLibs 2.7 REQUIRED)
+
 # Interfaces
 
 # Add sub-directories
@@ -90,6 +93,7 @@ add_subdirectory(iris_sfs)
 add_subdirectory(face_swap)
 add_subdirectory(face_swap_image)
 add_subdirectory(face_swap_batch)
+add_subdirectory(py_face_swap)
 
 # Documentation
 if(BUILD_DOCS)

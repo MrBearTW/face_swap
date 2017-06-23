@@ -1,0 +1,19 @@
+# Target
+add_library(pyfaceswap SHARED pyboost_cv3_converter.cpp pyFaceSwap.cpp)
+target_include_directories(pyfaceswap PRIVATE 
+	${OpenCV_INCLUDE_DIRS}
+    ${PYTHON_INCLUDE_DIR}
+    ${Qt5Gui_INCLUDE_DIRS}
+)
+set_target_properties(pyfaceswap PROPERTIES PREFIX "" OUTPUT_NAME "pyfaceswap")
+target_link_libraries(pyfaceswap PRIVATE
+	face_swap
+	${OpenCV_LIBS}
+    ${PYTHON_LIBRARY}
+	${Boost_LIBRARIES}
+	Qt5::Widgets
+	Qt5::Gui
+)
+
+# Installations
+install(TARGETS pyfaceswap LIBRARY DESTINATION lib)
