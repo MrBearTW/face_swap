@@ -25,7 +25,8 @@ class PyFaceSwap {
 
         void loadModels(string landmarks_path, string model_3dmm_h5_path, string model_3dmm_dat_path,
                 string reg_model_path, string reg_deploy_path, string reg_mean_path,
-                string seg_model_path, string seg_deploy_path, bool generic, bool with_expr, int gpu_device_id);
+                string seg_model_path, string seg_deploy_path, bool generic, bool with_expr, bool highQual,
+                int gpu_device_id);
 
     private:
         face_swap::FaceSwap *fs = NULL;
