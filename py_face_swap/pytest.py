@@ -35,8 +35,12 @@ def main():
     #cv2.imshow('Image', targetImg)
     #cv2.waitKey(0)
 
+    iterNum = 5
     start = time.time()
-    for _ in range(5):
+    if ( fs.setSourceImg(sourceImg) ):
+        print 'Set Source Image Failed!'
+        return
+    for _ in range(iterNum):
         if ( fs.setSourceImg(sourceImg) ):
             print 'Set Source Image Failed!'
             return
@@ -44,10 +48,10 @@ def main():
             print 'Set Target Image Failed!'
             return
         result = fs.swap()
-    latency = (time.time() - start) / 5.0
-    print latency
+    swap = time.time()-start
+    print 'swap spent: {}'.format(swap/float(iterNum))
 
-    cv2.imwrite('/root/face_swap/data/outptu/test.jpg', result)
+    cv2.imwrite('/root/face_swap/data/output/test.jpg', result)
 
     del fs
 
