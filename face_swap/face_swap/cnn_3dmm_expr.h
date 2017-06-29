@@ -34,7 +34,7 @@ namespace face_swap
 		*/
         CNN3DMMExpr(const std::string& deploy_file, const std::string& caffe_model_file,
             const std::string& mean_file, const std::string& model_file,
-            bool generic = false, bool with_expr = true,
+            bool generic = false, bool with_expr = true, bool highQual = true,
 			bool with_gpu = true, int gpu_device_id = 0);
 
 		/** Destructor.
@@ -56,7 +56,7 @@ namespace face_swap
             cv::Mat& expr_coefficients, cv::Mat& vecR, cv::Mat& vecT, cv::Mat& K);
     private:
         std::unique_ptr<FaceServices2> fservice;
-        bool m_generic, m_with_expr;
+        bool m_generic, m_with_expr, m_highQual;
     };
 
 }   // namespace face_swap

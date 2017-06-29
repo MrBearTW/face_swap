@@ -633,7 +633,7 @@ void FaceServices2::mergeIm(cv::Mat* output,cv::Mat bg,cv::Mat depth){
 
 
 
-bool FaceServices2::estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha, cv::Mat &vecR, cv::Mat &vecT, cv::Mat& K, cv::Mat &exprW, const char* outputDir, bool with_expr){
+bool FaceServices2::estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha, cv::Mat &vecR, cv::Mat &vecT, cv::Mat& K, cv::Mat &exprW, const char* outputDir, bool with_expr, bool highQual){
 	char text[200];
 	float renderParams[RENDER_PARAMS_COUNT];
 	float renderParams2[RENDER_PARAMS_COUNT];
@@ -660,32 +660,34 @@ bool FaceServices2::estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha
 		landIm.at<float>(i,1) = lms.at<float>(i,1);
 	}
 	festimator.estimatePose3D0(landModel,landIm,k_m,vecR,vecT);
-	float yaw = -vecR.at<float>(1,0);
-	landModel0 = festimator.getLM(shape,yaw);
-	std::vector<int> lmVisInd;
-	for (int i=0;i<60;i++){
-		if ((yaw > M_PI/10 && i > 7) || (yaw < -M_PI/10 && i < 9) || i > 16 || abs(yaw) <= M_PI/10)
-			lmVisInd.push_back(i);
-	}
-	cv::Mat tmpIm = colorIm/5;
-	landModel = cv::Mat( lmVisInd.size(),3,CV_32F);
-	landIm = cv::Mat::zeros( lmVisInd.size(),2,CV_32F);
-	for (int i=0;i<lmVisInd.size();i++){
-		int ind = lmVisInd[i];
-		landModel.at<float>(i,0) = landModel0.at<float>(ind,0);
-		landModel.at<float>(i,1) = landModel0.at<float>(ind,1);
-		landModel.at<float>(i,2) = landModel0.at<float>(ind,2);
-		landIm.at<float>(i,0) = lms.at<float>(ind,0);
-		landIm.at<float>(i,1) = lms.at<float>(ind,1);
-		//cv::circle(tmpIm,Point(landIm.at<float>(i,0),landIm.at<float>(i,1)),2,Scalar(255,0,0),2);
-	}
-	//sprintf(text,"%s/withLM.png",outputDir);
-	//imwrite(text,tmpIm);
-	//sprintf(text,"%s/%s_withLM.ply",outputDir,filename.c_str());
-	//write_plyFloat(text,landModel.t());
-	//getchar();
+        float yaw = -vecR.at<float>(1,0);
+        landModel0 = festimator.getLM(shape,yaw);
+        std::vector<int> lmVisInd;
+        for (int i=0;i<60;i++){
+            if ((yaw > M_PI/10 && i > 7) || (yaw < -M_PI/10 && i < 9) || i > 16 || abs(yaw) <= M_PI/10)
+                lmVisInd.push_back(i);
+        }
+    if (highQual) {
+        cv::Mat tmpIm = colorIm/5;
+        landModel = cv::Mat( lmVisInd.size(),3,CV_32F);
+        landIm = cv::Mat::zeros( lmVisInd.size(),2,CV_32F);
+        for (int i=0;i<lmVisInd.size();i++){
+            int ind = lmVisInd[i];
+            landModel.at<float>(i,0) = landModel0.at<float>(ind,0);
+            landModel.at<float>(i,1) = landModel0.at<float>(ind,1);
+            landModel.at<float>(i,2) = landModel0.at<float>(ind,2);
+            landIm.at<float>(i,0) = lms.at<float>(ind,0);
+            landIm.at<float>(i,1) = lms.at<float>(ind,1);
+            //cv::circle(tmpIm,Point(landIm.at<float>(i,0),landIm.at<float>(i,1)),2,Scalar(255,0,0),2);
+        }
+        //sprintf(text,"%s/withLM.png",outputDir);
+        //imwrite(text,tmpIm);
+        //sprintf(text,"%s/%s_withLM.ply",outputDir,filename.c_str());
+        //write_plyFloat(text,landModel.t());
+        //getchar();
 
-	festimator.estimatePose3D0(landModel,landIm,k_m,vecR,vecT);
+        festimator.estimatePose3D0(landModel,landIm,k_m,vecR,vecT);
+    }
 
     // Yuval
     if (!with_expr) return true;
@@ -705,8 +707,16 @@ bool FaceServices2::estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha
 	}
 
 	float bCost, cCost, fCost;
-	int bestIter = 0;
 	bCost = 10000.0f;
+    int maxIter, maxOpIter;
+    if (highQual) {
+        maxIter = 400;
+        maxOpIter = 60;
+    }
+    else { 
+        maxIter = 50;
+        maxOpIter = 10;
+    }
 
 	memset(params.sF,0,sizeof(float)*NUM_EXTRA_FEATURES);
 
@@ -721,32 +731,29 @@ bool FaceServices2::estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha
 	float renderParams_tmp[RENDER_PARAMS_COUNT];
 
 	params.optimizeAB[0] = params.optimizeAB[1] = false;
-	for (;iter<60;iter++) {
-			if (iter%20 == 0) {
-				cCost = updateHessianMatrix(false, alpha,renderParams,faces,colorIm,lmVisInd,landIm,params, prevR, prevT, exprW);
-				if (countFail > 10) {
-					countFail = 0;
-					break;
-				}
-				prevEF = cEF;
-			}
-			sno_step2(false, alpha, renderParams, faces,colorIm,lmVisInd,landIm,params,exprW,prevR, prevT);
-		}
-	iter = 60;
+    for (;iter<maxOpIter;iter++) {
+        if (iter%20 == 0) {
+            cCost = updateHessianMatrix(false, alpha,renderParams,faces,colorIm,lmVisInd,landIm,params, prevR, prevT, exprW);
+            if (countFail > 10) {
+                countFail = 0;
+                break;
+            }
+            prevEF = cEF;
+        }
+        sno_step2(false, alpha, renderParams, faces,colorIm,lmVisInd,landIm,params,exprW,prevR, prevT);
+    }
 	memset(params.doOptimize,false,sizeof(bool)*6);countFail = 0;
-    //int total_iter = 200;
-    int total_iter = 400;   // Yuval
-	for (;iter<total_iter;iter++) {
-			if (iter%60 == 0) {
-				cCost = updateHessianMatrix(false, alpha,renderParams,faces,colorIm,lmVisInd,landIm,params, prevR, prevT, exprW);
-				if (countFail > 10) {
-					countFail = 0;
-					break;
-				}
-				prevEF = cEF;
-			}
-			sno_step2(false, alpha, renderParams, faces,colorIm,lmVisInd,landIm,params,exprW,prevR, prevT);
-		}
+	for (;iter<maxIter;iter++) {
+        if (iter%maxOpIter == 0) {
+            cCost = updateHessianMatrix(false, alpha,renderParams,faces,colorIm,lmVisInd,landIm,params, prevR, prevT, exprW);
+            if (countFail > 10) {
+                countFail = 0;
+                break;
+            }
+            prevEF = cEF;
+        }
+        sno_step2(false, alpha, renderParams, faces,colorIm,lmVisInd,landIm,params,exprW,prevR, prevT);
+    }
 
 	///for (int i=0;i<3; i++) vecR.at<float>(i,0) = renderParams[i];
 	///for (int i=0;i<3; i++) vecT.at<float>(i,0) = renderParams[i+3];
@@ -808,7 +815,6 @@ bool FaceServices2::updatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha, 
 	}
 
 	float bCost, cCost, fCost;
-	int bestIter = 0;
 	bCost = 10000.0f;
 
 	memset(params.sF,0,sizeof(float)*NUM_EXTRA_FEATURES);

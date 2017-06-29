@@ -35,8 +35,8 @@ namespace face_swap
         FaceSwap(const std::string& landmarks_path, const std::string& model_3dmm_h5_path,
             const std::string& model_3dmm_dat_path, const std::string& reg_model_path,
             const std::string& reg_deploy_path, const std::string& reg_mean_path,
-            bool generic = false, bool with_expr = true, bool with_gpu = true, 
-			int gpu_device_id = 0);
+            bool generic = false, bool with_expr = true, bool highQual = true,
+            bool with_gpu = true, int gpu_device_id = 0);
 
 		/**	Set segmentation model.
 		Source and Target segmentations will be calculated using this model

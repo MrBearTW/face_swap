@@ -17,10 +17,10 @@ namespace face_swap
     CNN3DMMExpr::CNN3DMMExpr(const std::string& deploy_file,
 		const std::string& caffe_model_file, const std::string& mean_file,
 		const std::string& model_file, bool generic, bool with_expr,
-		bool with_gpu, int gpu_device_id) :
+        bool highQual, bool with_gpu, int gpu_device_id) :
         CNN3DMM(deploy_file, caffe_model_file, mean_file, 
 			!generic, with_gpu, gpu_device_id),
-        m_generic(generic), m_with_expr(with_expr)
+        m_generic(generic), m_with_expr(with_expr), m_highQual(highQual)
     {
         // Load Basel 3DMM
         BaselFace::load_BaselFace_data(model_file.c_str());
@@ -64,6 +64,6 @@ namespace face_swap
 
         // Calculate pose and expression
         fservice->estimatePoseExpr(img, LMs, shape_coefficients, vecR, vecT, K, 
-            expr_coefficients, "", m_with_expr);
+            expr_coefficients, "", m_with_expr, m_highQual);
     }
 }   // namespace face_swap

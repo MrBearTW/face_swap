@@ -2,19 +2,27 @@
 #include "face_swap/utilities.h"
 
 // std
+#include <iostream>
 #include <limits>
+#include <chrono>
 
 // OpenCV
 #include <opencv2/photo.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>  // Debug
 
+#define DEBUG 0
+
+using namespace std::chrono;
+
+int start_ms, end_ms;
+
 namespace face_swap
 {
     FaceSwap::FaceSwap(const std::string& landmarks_path, const std::string& model_3dmm_h5_path,
         const std::string& model_3dmm_dat_path, const std::string& reg_model_path,
         const std::string& reg_deploy_path, const std::string& reg_mean_path,
-        bool generic, bool with_expr, bool with_gpu, int gpu_device_id) :
+        bool generic, bool with_expr, bool highQual, bool with_gpu, int gpu_device_id) :
 		m_with_gpu(with_gpu),
 		m_gpu_device_id(gpu_device_id)
     {
@@ -24,7 +32,7 @@ namespace face_swap
         // Initialize CNN 3DMM with exression
         m_cnn_3dmm_expr = std::make_unique<CNN3DMMExpr>(
 			reg_deploy_path, reg_model_path, reg_mean_path, model_3dmm_dat_path,
-			generic, with_expr, with_gpu, gpu_device_id);
+			generic, with_expr, highQual, with_gpu, gpu_device_id);
 
         // Load Basel 3DMM
         m_basel_3dmm = std::make_unique<Basel3DMM>();
@@ -62,24 +70,62 @@ namespace face_swap
 			cropped_img, cropped_seg))
             return false;
 
+#if DEBUG
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
 		// If segmentation was not specified and we have a segmentation model then
 		// calculate the segmentation
 		if (cropped_seg.empty() && m_face_seg != nullptr)
 			cropped_seg = m_face_seg->process(cropped_img);
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "Segmentation: " << (end_ms-start_ms) << " ms" << std::endl;
 
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
         // Calculate coefficients and pose
         cv::Mat shape_coefficients, tex_coefficients, expr_coefficients;
         cv::Mat vecR, vecT, K;
         m_cnn_3dmm_expr->process(cropped_img, cropped_landmarks, shape_coefficients,
             tex_coefficients, expr_coefficients, vecR, vecT, K);
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "Pose estimation: " << (end_ms-start_ms) << " ms" << std::endl;
 
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
         // Create mesh
         m_src_mesh = m_basel_3dmm->sample(shape_coefficients, tex_coefficients, 
             expr_coefficients);
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "Create mesh: " << (end_ms-start_ms) << " ms" << std::endl;
 
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
         // Texture mesh
         generateTexture(m_src_mesh, cropped_img, cropped_seg, vecR, vecT, K, 
             m_tex, m_uv);
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "Generate texture mesh: " << (end_ms-start_ms) << " ms" << std::endl;
+#endif
 
         /// Debug ///
         m_src_cropped_img = cropped_img;
@@ -132,16 +178,16 @@ namespace face_swap
         m_dst_mesh.tex = m_tex;
         m_dst_mesh.uv = m_uv;
 
-        // Initialize renderer
-        m_face_renderer->init(cropped_img.cols, cropped_img.rows);
-        m_face_renderer->setProjection(m_K.at<float>(4));
-        m_face_renderer->setMesh(m_dst_mesh);
-
         return true;
     }
 
     cv::Mat FaceSwap::swap()
     {
+        // Initialize renderer
+        m_face_renderer->init(m_tgt_cropped_img.cols, m_tgt_cropped_img.rows);
+        m_face_renderer->setProjection(m_K.at<float>(4));
+        m_face_renderer->setMesh(m_dst_mesh);
+
         // Render
         cv::Mat rendered_img;
         m_face_renderer->render(m_vecR, m_vecT);
@@ -170,6 +216,11 @@ namespace face_swap
         std::vector<cv::Point>& landmarks, std::vector<cv::Point>& cropped_landmarks,
         cv::Mat& cropped_img, cv::Mat& cropped_seg, cv::Rect& bbox)
     {
+#if DEBUG
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
         // Calculate landmarks
         m_sfl->clear();
         const sfl::Frame& lmsFrame = m_sfl->addFrame(img);
@@ -178,6 +229,13 @@ namespace face_swap
         const sfl::Face* face = lmsFrame.getFace(sfl::getMainFaceID(m_sfl->getSequence()));
         landmarks = face->landmarks; // Debug
         cropped_landmarks = landmarks; 
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "Landmark calculation: " << (end_ms-start_ms) << " ms" << std::endl;
+#endif
+
 
         // Calculate crop bounding box
         bbox = sfl::getFaceBBoxFromLandmarks(landmarks, img.size(), true);

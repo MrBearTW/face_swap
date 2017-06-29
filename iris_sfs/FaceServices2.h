@@ -134,7 +134,7 @@ public:
 	void mergeIm(cv::Mat* output,cv::Mat bg,cv::Mat depth);
 	~FaceServices2(void);
 
-	bool estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha, cv::Mat &vecR, cv::Mat &vecT, cv::Mat& K, cv::Mat &exprWeightse, const char* outputDir, bool with_expr = true);
+	bool estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha, cv::Mat &vecR, cv::Mat &vecT, cv::Mat& K, cv::Mat &exprWeightse, const char* outputDir, bool with_expr = true, bool highQual = true);
 	bool updatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha, cv::Mat &vecR, cv::Mat &vecT, cv::Mat &exprWeightse, char* outputDir, cv::Mat &prevR, cv::Mat &prevT);
 
 	cv::Mat testRender(cv::Mat colorIm, cv::Mat alpha, cv::Mat r, cv::Mat t, cv::Mat exprW, char* outDir, bool updateColor = false);
