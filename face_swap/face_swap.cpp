@@ -363,6 +363,38 @@ namespace face_swap
         return blend;
     }
 
+    Mesh FaceSwap::getDstMesh() {
+        return m_dst_mesh;
+    }
+
+    float FaceSwap::getK4() {
+        return m_K.at<float>(4);
+    }
+
+    cv::Mat FaceSwap::getVecT() {
+        return m_vecT;
+    }
+
+    cv::Mat FaceSwap::getVecR() {
+        return m_vecR;
+    }
+
+    cv::Mat FaceSwap::getTgtCroppedImg() {
+        return m_tgt_cropped_img;
+    }
+
+    cv::Mat FaceSwap::getTargetImg() {
+        return m_target_img;
+    }
+
+    cv::Mat FaceSwap::getTargetSeg() {
+        return m_target_seg;
+    }
+
+    cv::Rect FaceSwap::getTargetBbox() {
+        return m_target_bbox;
+    }
+
     cv::Mat FaceSwap::debugSource()
     {
         const float scale = 3.0f;

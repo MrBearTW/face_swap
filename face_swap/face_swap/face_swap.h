@@ -79,6 +79,17 @@ namespace face_swap
 		*/
         const Mesh& getTargetMesh() const;
 
+		/**	Blend the source and destination images based on a mask for the soure
+		image. The mask is calculated by first removing black background pixels and
+		then doing bitwise and with the destination's segmentation if it is specified.
+		@param[in] src The source image.
+		@param[in] dst The destination image.
+		@param[in] dst_seg The segmentation for the destination image.
+		@return The src and dst blended image.
+		*/
+        cv::Mat blend(const cv::Mat& src, const cv::Mat& dst,
+            const cv::Mat& dst_seg = cv::Mat());
+
     private:
 
 		/** Crops the image and it's corresponding segmentation according
@@ -140,17 +151,6 @@ namespace face_swap
         cv::Mat generateTextureCoordinates(const Mesh& mesh, const cv::Size& img_size,
             const cv::Mat& vecR, const cv::Mat& vecT, const cv::Mat& K);
 
-		/**	Blend the source and destination images based on a mask for the soure
-		image. The mask is calculated by first removing black background pixels and
-		then doing bitwise and with the destination's segmentation if it is specified.
-		@param[in] src The source image.
-		@param[in] dst The destination image.
-		@param[in] dst_seg The segmentation for the destination image.
-		@return The src and dst blended image.
-		*/
-        cv::Mat blend(const cv::Mat& src, const cv::Mat& dst,
-            const cv::Mat& dst_seg = cv::Mat());
-
     private:
         std::shared_ptr<sfl::SequenceFaceLandmarks> m_sfl;
         std::unique_ptr<CNN3DMMExpr> m_cnn_3dmm_expr;
@@ -178,6 +178,14 @@ namespace face_swap
         std::vector<cv::Point> m_src_landmarks, m_tgt_landmarks;
 
     public:
+        Mesh getDstMesh();
+        float getK4();
+        cv::Mat getVecT();
+        cv::Mat getVecR();
+        cv::Mat getTgtCroppedImg();
+        cv::Mat getTargetImg();
+        cv::Mat getTargetSeg();
+        cv::Rect getTargetBbox();
         cv::Mat debugSource();
         cv::Mat debugTarget();
         cv::Mat debug();
