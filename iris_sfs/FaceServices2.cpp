@@ -55,12 +55,13 @@ void FaceServices2::init(int w, int h, float f)
     tex = shape * 0 + 128;
 
     // Initialize image renderer
-    if (im_render == nullptr)
-    {
-        im_render = new FImRenderer(cv::Mat::zeros(h, w, CV_8UC3));
-        im_render->loadMesh(shape, shape * 0, faces);
-    }
-    else im_render->init(cv::Mat::zeros(h, w, CV_8UC3));
+    // Rudy: I don't think we need this here.
+    //if (im_render == nullptr)
+    //{
+        //im_render = new FImRenderer(cv::Mat::zeros(h, w, CV_8UC3));
+        //im_render->loadMesh(shape, shape * 0, faces);
+    //}
+    //else im_render->init(cv::Mat::zeros(h, w, CV_8UC3));
 }
 
 bool FaceServices2::projectCheckVis(FImRenderer* im_render, cv::Mat shape, float* r, float *t, cv::Mat refDepth, bool* &visible){

@@ -7,6 +7,7 @@
 // std
 #include <exception>
 #include <fstream>
+#include <iostream>
 
 // OpenCV
 #include <opencv2/imgproc.hpp>
