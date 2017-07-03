@@ -66,7 +66,7 @@ class FsProcessor(Processor):
             rszRes = cv2.resize(tmp, image_frame.size, interpolation=cv2.INTER_LINEAR)
             rszRes = cv2.cvtColor(rszRes, cv2.COLOR_BGR2RGB)
             self.lastRes = (Image.fromarray(rszRes), metadata)
-        elif self.counter == 5:
+        elif self.counter == 3:
             for _ in range(self.counter+1):
                 self.send_image_frame(self.lastRes[0], self.lastRes[1])
             self.counter = -1
