@@ -63,7 +63,7 @@ namespace face_swap
 
 		/**	Set target image and segmentation.
 		*/
-        bool setTarget(const cv::Mat& img, const cv::Mat& seg = cv::Mat());
+        bool setTarget(const cv::Mat& img, const cv::Mat& seg = cv::Mat(), bool bypass = false);
 
 		/**	Transfer the face from the source image onto the face in the target image.
 		*/
@@ -167,6 +167,7 @@ namespace face_swap
         cv::Mat m_tgt_cropped_img, m_tgt_cropped_seg;
         cv::Mat m_target_img, m_target_seg;
         cv::Rect m_target_bbox;
+        cv::Mat m_shape_coefficients, m_tex_coefficients, m_expr_coefficients;
 
         /// Debug ///
         cv::Mat m_source_img;

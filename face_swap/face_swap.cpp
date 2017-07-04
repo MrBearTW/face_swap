@@ -139,10 +139,10 @@ namespace face_swap
         return true;
     }
 
-    bool FaceSwap::setTarget(const cv::Mat& img, const cv::Mat& seg)
+    bool FaceSwap::setTarget(const cv::Mat& img, const cv::Mat& seg, bool bypass)
     {
         m_target_img = img;
-        m_target_seg = seg;
+        //m_target_seg = seg;
 
         // Preprocess image
         std::vector<cv::Point> cropped_landmarks;
@@ -150,31 +150,31 @@ namespace face_swap
         if (!preprocessImages(img, seg, m_tgt_landmarks, cropped_landmarks,
             cropped_img, cropped_seg, m_target_bbox))
             return false;
+        m_tgt_cropped_img = cropped_img;
 
 		// If segmentation was not specified and we have a segmentation model then
 		// calculate the segmentation
-		if (cropped_seg.empty() && m_face_seg != nullptr)
-		{
-			cropped_seg = m_face_seg->process(cropped_img);
-			m_target_seg = cv::Mat::zeros(img.size(), CV_8U);
-			cropped_seg.copyTo(m_target_seg(m_target_bbox));
-		}
-			
-        m_tgt_cropped_img = cropped_img;
-        m_tgt_cropped_seg = cropped_seg;
+        if (!bypass) {
+            if (cropped_seg.empty() && m_face_seg != nullptr)
+            {
+                cropped_seg = m_face_seg->process(cropped_img);
+                m_target_seg = cv::Mat::zeros(img.size(), CV_8U);
+                cropped_seg.copyTo(m_target_seg(m_target_bbox));
+            }
+            m_tgt_cropped_seg = cropped_seg;
+        }
         
         /// Debug ///
         m_tgt_cropped_landmarks = cropped_landmarks;
         /////////////
 
         // Calculate coefficients and pose
-        cv::Mat shape_coefficients, tex_coefficients, expr_coefficients;
-        m_cnn_3dmm_expr->process(cropped_img, cropped_landmarks, shape_coefficients,
-            tex_coefficients, expr_coefficients, m_vecR, m_vecT, m_K);
+        m_cnn_3dmm_expr->process(cropped_img, cropped_landmarks, m_shape_coefficients,
+            m_tex_coefficients, m_expr_coefficients, m_vecR, m_vecT, m_K, bypass);
 
         // Create mesh
-        m_dst_mesh = m_basel_3dmm->sample(shape_coefficients, tex_coefficients,
-            expr_coefficients);
+        m_dst_mesh = m_basel_3dmm->sample(m_shape_coefficients, m_tex_coefficients,
+            m_expr_coefficients);
         m_dst_mesh.tex = m_tex;
         m_dst_mesh.uv = m_uv;
 

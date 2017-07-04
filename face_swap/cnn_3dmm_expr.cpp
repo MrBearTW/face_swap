@@ -37,15 +37,17 @@ namespace face_swap
     void CNN3DMMExpr::process(const cv::Mat& img, 
         const std::vector<cv::Point>& landmarks, cv::Mat& shape_coefficients,
         cv::Mat& tex_coefficients, cv::Mat& expr_coefficients,
-        cv::Mat& vecR, cv::Mat& vecT, cv::Mat& K)
+        cv::Mat& vecR, cv::Mat& vecT, cv::Mat& K, bool bypass)
     {
         // Calculate shape and texture coefficients
-        if (m_generic)
-        {
-            shape_coefficients = cv::Mat::zeros(99, 1, CV_32F);
-            tex_coefficients = cv::Mat::zeros(99, 1, CV_32F);
+        if (!bypass) {
+            if (m_generic)
+            {
+                shape_coefficients = cv::Mat::zeros(99, 1, CV_32F);
+                tex_coefficients = cv::Mat::zeros(99, 1, CV_32F);
+            }
+            else CNN3DMM::process(img, shape_coefficients, tex_coefficients);
         }
-        else CNN3DMM::process(img, shape_coefficients, tex_coefficients);
 
         // Set up face service
         //fservice->setUp(img.cols, img.rows, 1000.0f);

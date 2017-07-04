@@ -12,7 +12,7 @@ class PyFaceSwap {
         ~PyFaceSwap();
         int initCtx(int argc, PyObject *arglst);
         int setSourceImg(PyObject *pyImg);
-        int setTargetImg(PyObject *pyImg);
+        int setTargetImg(PyObject *pyImg, bool bypass = false);
         PyObject* blend(PyObject *pyImg);
         PyObject* getFs();
 

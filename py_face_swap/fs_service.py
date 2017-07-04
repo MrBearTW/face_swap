@@ -16,7 +16,8 @@ class FsProcessor(Processor):
     def on_start(self, session_id):
         print ">>> Processor [Video dummy: metadata] started: %d <<<" % (session_id, )
         self.counter = 0
-        self.lastRes = None # (PIL, metadata)
+        self.lastFrame = None
+        self.firstFrame = True
 
     def on_end(self, session_id):
         print ">>> Processor ended: %d <<<" % (session_id, )
@@ -29,32 +30,43 @@ class FsProcessor(Processor):
 
     def on_image_frame(self, session_id, stream_id, time, image_frame, metadata):        
 
-        global g_producerSem, g_resImg, g_tgtImg, g_producerEvent, g_consumerEvent
+        global g_producerSem, g_resImg, g_tgtImg, g_producerEvent, g_consumerEvent, g_bypass
 
+        if self.firstFrame:
+            self.lastFrame = (image_frame, metadata)
+            self.firstFrame = False
+
+        if self.counter > skipped:
+            self.counter = 0
+
+        #Convert image from PIL to ndarray
+        cvTgtImage = self.pil2cv(image_frame)
+        tgtRszRatio = targetHeight / cvTgtImage.shape[0]
+
+        g_producerSem.acquire()
+        g_tgtImg = cv2.resize(cvTgtImage, None, None, fx=tgtRszRatio, fy=tgtRszRatio,\
+                interpolation=cv2.INTER_LINEAR)
         if self.counter == 0:
-            self.lastRes = (image_frame, metadata)
-            #Convert image from PIL to ndarray
-            cvTgtImage = self.pil2cv(image_frame)
-            tgtRszRatio = targetHeight / cvTgtImage.shape[0]
+            g_bypass = False
+        else:
+            g_bypass = True
+        g_consumerEvent.set()
+        g_producerEvent.wait()
+        result = g_resImg
+        failed = g_failed
+        g_producerEvent.clear()
+        g_producerSem.release()
 
-            g_producerSem.acquire()
-            g_tgtImg = cv2.resize(cvTgtImage, None, None, fx=tgtRszRatio, fy=tgtRszRatio,\
-                    interpolation=cv2.INTER_LINEAR)
-            g_consumerEvent.set()
-            g_producerEvent.wait()
-            result = g_resImg
-            g_producerEvent.clear()
-            
-            g_producerSem.release()
-
+        if not failed:
             rszRes = cv2.resize(result, image_frame.size, interpolation=cv2.INTER_LINEAR)
             rszRes = cv2.cvtColor(rszRes, cv2.COLOR_BGR2RGB)
-            self.lastRes = (Image.fromarray(rszRes), metadata)
-        elif self.counter == 5:
-            for _ in range(self.counter+1):
-                self.send_image_frame(self.lastRes[0], self.lastRes[1])
-            self.counter = -1
-        self.counter = self.counter + 1
+            print '>>> Image sent'
+            self.counter = self.counter + 1
+            self.lastFrame = (Image.fromarray(rszRes), metadata)
+        else:
+            self.counter = 0
+        self.send_image_frame(self.lastFrame[0], self.lastFrame[1])
+
 
 class Renderer(threading.Thread):
 
@@ -63,7 +75,7 @@ class Renderer(threading.Thread):
 
     def run(self):
 
-        global g_producerSem, g_resImg, g_tgtImg, g_producerEvent, g_consumerEvent
+        global g_producerSem, g_resImg, g_tgtImg, g_producerEvent, g_consumerEvent, g_failed
 
         self.pfs = pyfaceswap.PyFaceSwap()
 
@@ -92,11 +104,13 @@ class Renderer(threading.Thread):
 
             ## Render
             print 'Got something to render...'
-            if ( self.pfs.setTargetImg(g_tgtImg) ):
-                print 'Set Target Image Failed! Use last result'
-            print '>>> Target set!'
-            unblended = self.renderer.swap(fs)
-            g_resImg = self.pfs.blend(unblended)
+            if ( not self.pfs.setTargetImg(g_tgtImg, g_bypass) ):
+                g_failed = False
+                print '>>> Target set!'
+                unblended = self.renderer.swap(fs)
+                g_resImg = self.pfs.blend(unblended)
+            else:
+                g_failed = True
             g_producerEvent.set()
 
             ## Release lock
@@ -106,6 +120,8 @@ class Renderer(threading.Thread):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, required=True)
+    parser.add_argument('--gpu', type=int, required=True)
+    parser.add_argument('--highQual', type=int, required=True)
     args = parser.parse_args()
 
     landmarks = '/root/face_swap/data/models/shape_predictor_68_face_landmarks.dat'       # path to landmarks model file
@@ -117,24 +133,28 @@ if __name__ == '__main__':
     seg_model = '/root/face_swap/data/models/face_seg_fcn8s.caffemodel'                   # path to face segmentation CNN model file (.caffemodel)
     seg_deploy = '/root/face_swap/data/models/face_seg_fcn8s_deploy.prototxt'             # path to face segmentation CNN deploy file (.prototxt)
     source = '/root/face_swap/data/images/brad_pitt_01.jpg'     # source image
-    target = '/root/face_swap/data/images/trump.avi'     # source image
-    cap = cv2.VideoCapture(target)
 
     # Five global variables for synchronization
+    g_failed = False
     g_tgtImg = None
     g_resImg = None
+    g_bypass = False
     g_producerSem = threading.Semaphore()
     g_producerEvent = threading.Event()
     g_consumerEvent = threading.Event()
 
-    gpuId = 1
+    gpuId = args.gpu
     expReg = 1
     genericFace = 0
-    highQual = 0
+    highQual = args.highQual
     if highQual:
-        targetHeight = 240.0
+        print 'High Quality Enabled!'
+        targetHeight = 360.0
+        skipped = 0
     else:
-        targetHeight = 200.0
+        print 'Low Quality Enabled!'
+        targetHeight = 180.0
+        skipped = 3
 
 
     renderThread = Renderer()
