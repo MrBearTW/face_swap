@@ -53,7 +53,7 @@ namespace face_swap
 		*/
         void process(const cv::Mat& img, const std::vector<cv::Point>& landmarks,
             cv::Mat& shape_coefficients, cv::Mat& tex_coefficients,
-            cv::Mat& expr_coefficients, cv::Mat& vecR, cv::Mat& vecT, cv::Mat& K);
+            cv::Mat& expr_coefficients, cv::Mat& vecR, cv::Mat& vecT, cv::Mat& K, bool bypass = false);
     private:
         std::unique_ptr<FaceServices2> fservice;
         bool m_generic, m_with_expr, m_highQual;

@@ -15,12 +15,13 @@ def main():
     source = '/root/face_swap/data/images/brad_pitt_01.jpg'     # source image
     target = '/root/face_swap/data/images/795.jpg'  # target image
 
-    fs = pyfaceswap.PyFaceSwap()
-    if( fs.initCtx(len(sys.argv), sys.argv) ):
+    pfs = pyfaceswap.PyFaceSwap()
+    renderer = pyfaceswap.PyFaceRenderer()
+    if( renderer.createCtx(len(sys.argv), sys.argv) ):
         print 'Initialization failed!'
         return
-    fs.loadModels(landmarks, model_3dmm_h5, model_3dmm_dat, reg_model, reg_deploy,\
-            reg_mean, seg_model, seg_deploy, 0, 1, 1)
+    pfs.loadModels(landmarks, model_3dmm_h5, model_3dmm_dat, reg_model, reg_deploy,\
+            reg_mean, seg_model, seg_deploy, 0, 1, 0, 1)
 
     sourceImg = cv2.imread(source)
     targetImg = cv2.imread(target)
@@ -30,30 +31,24 @@ def main():
     
     result = []
 
-    #cv2.imshow('Image', sourceImg)
-    #cv2.waitKey(0)
-    #cv2.imshow('Image', targetImg)
-    #cv2.waitKey(0)
-
-    iterNum = 5
+    iterNum = 1
     start = time.time()
-    if ( fs.setSourceImg(sourceImg) ):
+    if ( pfs.setSourceImg(sourceImg) ):
         print 'Set Source Image Failed!'
         return
     for _ in range(iterNum):
-        if ( fs.setSourceImg(sourceImg) ):
-            print 'Set Source Image Failed!'
-            return
-        if ( fs.setTargetImg(targetImg) ):
+        if ( pfs.setTargetImg(targetImg) ):
             print 'Set Target Image Failed!'
             return
-        result = fs.swap()
+        unblended = renderer.swap(pfs.getFs())
+        result = pfs.blend(unblended)
     swap = time.time()-start
     print 'swap spent: {}'.format(swap/float(iterNum))
 
     cv2.imwrite('/root/face_swap/data/output/test.jpg', result)
 
-    del fs
+    del renderer
+    del pfs
 
 if __name__ == '__main__':
     main()
