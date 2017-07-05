@@ -139,7 +139,7 @@ namespace face_swap
         return true;
     }
 
-    bool FaceSwap::setTarget(const cv::Mat& img, const cv::Mat& seg, bool bypass)
+    bool FaceSwap::setTarget(const cv::Mat& img, const cv::Mat& seg, bool bypass, bool savePair)
     {
         m_target_img = img;
         //m_target_seg = seg;
@@ -147,13 +147,20 @@ namespace face_swap
         // Preprocess image
         std::vector<cv::Point> cropped_landmarks;
         cv::Mat cropped_img, cropped_seg;
-        if (!preprocessImages(img, seg, m_tgt_landmarks, cropped_landmarks,
-            cropped_img, cropped_seg, m_target_bbox))
-            return false;
-        m_tgt_cropped_img = cropped_img;
+        if (!bypass) {
+            if (!preprocessImages(img, seg, m_tgt_landmarks, cropped_landmarks,
+                cropped_img, cropped_seg, m_target_bbox))
+                return false;
+            m_tgt_cropped_img = cropped_img;
+        }
 
 		// If segmentation was not specified and we have a segmentation model then
 		// calculate the segmentation
+#if DEBUG
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
         if (!bypass) {
             if (cropped_seg.empty() && m_face_seg != nullptr)
             {
@@ -163,14 +170,37 @@ namespace face_swap
             }
             m_tgt_cropped_seg = cropped_seg;
         }
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "Segmentation: " << (end_ms-start_ms) << " ms" << std::endl;
+#endif
         
         /// Debug ///
         m_tgt_cropped_landmarks = cropped_landmarks;
         /////////////
 
+#if DEBUG
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
         // Calculate coefficients and pose
-        m_cnn_3dmm_expr->process(cropped_img, cropped_landmarks, m_shape_coefficients,
-            m_tex_coefficients, m_expr_coefficients, m_vecR, m_vecT, m_K, bypass);
+        if (!bypass) {
+            m_cnn_3dmm_expr->process(cropped_img, cropped_landmarks, m_shape_coefficients,
+                m_tex_coefficients, m_expr_coefficients, m_vecR, m_vecT, m_K, bypass);
+        }
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "Pose estimation: " << (end_ms-start_ms) << " ms" << std::endl;
+#endif
+
+        if (savePair) {
+            // Save cropped_img, m_shape_coefficients, m_tex_coefficients, m_expr_coefficients
+        }
 
         // Create mesh
         m_dst_mesh = m_basel_3dmm->sample(m_shape_coefficients, m_tex_coefficients,

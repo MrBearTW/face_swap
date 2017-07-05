@@ -53,12 +53,12 @@ int PyFaceSwap::setSourceImg(PyObject* pyImg) {
     return 0;
 }
 
-int PyFaceSwap::setTargetImg(PyObject* pyImg, bool bypass) {
+int PyFaceSwap::setTargetImg(PyObject* pyImg, bool bypass, bool savePair) {
     cv::Mat image, target_seg;
     image = pbcvt::fromNDArrayToMat(pyImg);
     //cv::imshow("Target", image);
     //cv::waitKey(0);
-    int ret = fs->setTarget(image, target_seg, bypass);
+    int ret = fs->setTarget(image, target_seg, bypass, savePair);
     if (!ret) return -1;
     return 0;
 }
