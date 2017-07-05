@@ -1,6 +1,7 @@
 import argparse
 import random
 import threading
+import time
 import sys
 import cv2
 import pyfaceswap
@@ -28,10 +29,11 @@ class FsProcessor(Processor):
         return cvImg
 
 
-    def on_image_frame(self, session_id, stream_id, time, image_frame, metadata):        
+    def on_image_frame(self, session_id, stream_id, t, image_frame, metadata):        
 
         global g_producerSem, g_resImg, g_tgtImg, g_producerEvent, g_consumerEvent, g_bypass
 
+        start = time.time()
         if self.firstFrame:
             self.lastFrame = (image_frame, metadata)
             self.firstFrame = False
@@ -60,12 +62,12 @@ class FsProcessor(Processor):
         if not failed:
             rszRes = cv2.resize(result, image_frame.size, interpolation=cv2.INTER_LINEAR)
             rszRes = cv2.cvtColor(rszRes, cv2.COLOR_BGR2RGB)
-            print '>>> Image sent'
             self.counter = self.counter + 1
             self.lastFrame = (Image.fromarray(rszRes), metadata)
         else:
             self.counter = 0
         self.send_image_frame(self.lastFrame[0], self.lastFrame[1])
+        print 'Latency: %f ms'%((time.time()-start)*1000)
 
 
 class Renderer(threading.Thread):
@@ -87,25 +89,22 @@ class Renderer(threading.Thread):
         rszSrcImg = cv2.resize(sourceImg, None, None, fx=srcRszRatio, fy=srcRszRatio,\
                 interpolation=cv2.INTER_LINEAR)
         if ( self.pfs.setSourceImg(rszSrcImg) ):
-            print 'Set Source Image Failed!'
-        print '>>> Source set!'
-
+            sys.stderr.write('Set Source Image Failed!\n')
 
         self.renderer = pyfaceswap.PyFaceRenderer()
         if( self.renderer.createCtx(len(sys.argv), sys.argv) ):
-            print 'Initialization failed!'
+            sys.stderr.write('Initialization failed!\n')
 
         fs = self.pfs.getFs()
 
         while True:
             ## Wait for lock
-            print 'Waiting for Rendering...'
+            sys.stderr.write('Waiting for Rendering...\n')
             g_consumerEvent.wait()
             ## Render
-            print 'Got something to render...'
+            sys.stderr.write('Got something to render...\n')
             if ( not self.pfs.setTargetImg(g_tgtImg, g_bypass) ):
                 g_failed = False
-                print '>>> Target set!'
                 unblended = self.renderer.swap(fs)
                 g_resImg = self.pfs.blend(unblended)
             else:
@@ -113,7 +112,7 @@ class Renderer(threading.Thread):
             g_producerEvent.set()
 
             ## Release lock
-            print 'Done'
+            sys.stderr.write('Done\n')
             g_consumerEvent.clear()
 
 if __name__ == '__main__':
