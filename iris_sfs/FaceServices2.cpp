@@ -715,8 +715,8 @@ bool FaceServices2::estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha
         maxOpIter = 60;
     }
     else { 
-        maxIter = 50;
-        maxOpIter = 10;
+        maxIter = 20;
+        maxOpIter = 20;
     }
 
 	memset(params.sF,0,sizeof(float)*NUM_EXTRA_FEATURES);
