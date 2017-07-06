@@ -139,7 +139,7 @@ namespace face_swap
         return true;
     }
 
-    bool FaceSwap::setTarget(const cv::Mat& img, const cv::Mat& seg, bool bypass, bool savePair)
+    bool FaceSwap::setTarget(const cv::Mat& img, const cv::Mat& seg, bool bypass)
     {
         m_target_img = img;
         //m_target_seg = seg;
@@ -198,10 +198,7 @@ namespace face_swap
         std::cout << "Pose estimation: " << (end_ms-start_ms) << " ms" << std::endl;
 #endif
 
-        if (savePair) {
-            // Save cropped_img, m_shape_coefficients, m_tex_coefficients, m_expr_coefficients
-        }
-
+    
         // Create mesh
         m_dst_mesh = m_basel_3dmm->sample(m_shape_coefficients, m_tex_coefficients,
             m_expr_coefficients);

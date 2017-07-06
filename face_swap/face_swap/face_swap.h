@@ -63,7 +63,7 @@ namespace face_swap
 
 		/**	Set target image and segmentation.
 		*/
-        bool setTarget(const cv::Mat& img, const cv::Mat& seg = cv::Mat(), bool bypass = false, bool savePair = false);
+        bool setTarget(const cv::Mat& img, const cv::Mat& seg = cv::Mat(), bool bypass = false);
 
 		/**	Transfer the face from the source image onto the face in the target image.
 		*/
