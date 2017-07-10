@@ -11,11 +11,9 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>  // Debug
 
-#define DEBUG 0
+#define DEBUG 1
 
 using namespace std::chrono;
-
-int start_ms, end_ms;
 
 namespace face_swap
 {
@@ -71,6 +69,7 @@ namespace face_swap
             return false;
 
 #if DEBUG
+        int start_ms, end_ms;
         start_ms = duration_cast< milliseconds >(
             system_clock::now().time_since_epoch()
         ).count();
@@ -84,10 +83,6 @@ namespace face_swap
             system_clock::now().time_since_epoch()
         ).count();
         std::cout << "Segmentation: " << (end_ms-start_ms) << " ms" << std::endl;
-
-        start_ms = duration_cast< milliseconds >(
-            system_clock::now().time_since_epoch()
-        ).count();
 #endif
         // Calculate coefficients and pose
         cv::Mat shape_coefficients, tex_coefficients, expr_coefficients;
@@ -95,11 +90,6 @@ namespace face_swap
         m_cnn_3dmm_expr->process(cropped_img, cropped_landmarks, shape_coefficients,
             tex_coefficients, expr_coefficients, vecR, vecT, K);
 #if DEBUG
-        end_ms = duration_cast< milliseconds >(
-            system_clock::now().time_since_epoch()
-        ).count();
-        std::cout << "Pose estimation: " << (end_ms-start_ms) << " ms" << std::endl;
-
         start_ms = duration_cast< milliseconds >(
             system_clock::now().time_since_epoch()
         ).count();
@@ -157,6 +147,7 @@ namespace face_swap
 		// If segmentation was not specified and we have a segmentation model then
 		// calculate the segmentation
 #if DEBUG
+        int start_ms, end_ms;
         start_ms = duration_cast< milliseconds >(
             system_clock::now().time_since_epoch()
         ).count();
@@ -181,23 +172,11 @@ namespace face_swap
         m_tgt_cropped_landmarks = cropped_landmarks;
         /////////////
 
-#if DEBUG
-        start_ms = duration_cast< milliseconds >(
-            system_clock::now().time_since_epoch()
-        ).count();
-#endif
         // Calculate coefficients and pose
         if (!bypass) {
             m_cnn_3dmm_expr->process(cropped_img, cropped_landmarks, m_shape_coefficients,
                 m_tex_coefficients, m_expr_coefficients, m_vecR, m_vecT, m_K, bypass);
         }
-#if DEBUG
-        end_ms = duration_cast< milliseconds >(
-            system_clock::now().time_since_epoch()
-        ).count();
-        std::cout << "Pose estimation: " << (end_ms-start_ms) << " ms" << std::endl;
-#endif
-
     
         // Create mesh
         m_dst_mesh = m_basel_3dmm->sample(m_shape_coefficients, m_tex_coefficients,
@@ -244,6 +223,7 @@ namespace face_swap
         cv::Mat& cropped_img, cv::Mat& cropped_seg, cv::Rect& bbox)
     {
 #if DEBUG
+        int start_ms, end_ms;
         start_ms = duration_cast< milliseconds >(
             system_clock::now().time_since_epoch()
         ).count();

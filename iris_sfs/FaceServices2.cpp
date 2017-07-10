@@ -8,9 +8,12 @@
 #include <Eigen/SparseLU>
 //#include <Eigen/SPQRSupport>
 #include <omp.h>
+#include <chrono>
+#define DEBUG 1
 
 using namespace std;
 using namespace cv;
+using namespace std::chrono;
 
 FaceServices2::FaceServices2(void)
 {
@@ -635,6 +638,7 @@ void FaceServices2::mergeIm(cv::Mat* output,cv::Mat bg,cv::Mat depth){
 
 
 bool FaceServices2::estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha, cv::Mat &vecR, cv::Mat &vecT, cv::Mat& K, cv::Mat &exprW, const char* outputDir, bool with_expr, bool highQual){
+    int start_ms, end_ms;
 	char text[200];
 	float renderParams[RENDER_PARAMS_COUNT];
 	float renderParams2[RENDER_PARAMS_COUNT];
@@ -660,6 +664,11 @@ bool FaceServices2::estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha
 		landIm.at<float>(i,0) = lms.at<float>(i,0);
 		landIm.at<float>(i,1) = lms.at<float>(i,1);
 	}
+#if DEBUG
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
 	festimator.estimatePose3D0(landModel,landIm,k_m,vecR,vecT);
         float yaw = -vecR.at<float>(1,0);
         landModel0 = festimator.getLM(shape,yaw);
@@ -668,6 +677,12 @@ bool FaceServices2::estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha
             if ((yaw > M_PI/10 && i > 7) || (yaw < -M_PI/10 && i < 9) || i > 16 || abs(yaw) <= M_PI/10)
                 lmVisInd.push_back(i);
         }
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "Pose Estimation: " << (end_ms-start_ms) << " ms" << std::endl;
+#endif
     if (highQual) {
         cv::Mat tmpIm = colorIm/5;
         landModel = cv::Mat( lmVisInd.size(),3,CV_32F);
@@ -731,6 +746,11 @@ bool FaceServices2::estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha
 	int EM = 29;
 	float renderParams_tmp[RENDER_PARAMS_COUNT];
 
+#if DEBUG
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
 	params.optimizeAB[0] = params.optimizeAB[1] = false;
     for (;iter<maxOpIter;iter++) {
         if (iter%20 == 0) {
@@ -755,6 +775,12 @@ bool FaceServices2::estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha
         }
         sno_step2(false, alpha, renderParams, faces,colorIm,lmVisInd,landIm,params,exprW,prevR, prevT);
     }
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "Expression Estimation: " << (end_ms-start_ms) << " ms" << std::endl;
+#endif
 
 	///for (int i=0;i<3; i++) vecR.at<float>(i,0) = renderParams[i];
 	///for (int i=0;i<3; i++) vecT.at<float>(i,0) = renderParams[i+3];

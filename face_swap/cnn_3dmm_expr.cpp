@@ -8,10 +8,14 @@
 #include <exception>
 #include <fstream>
 #include <iostream>
+#include <chrono>
 
 // OpenCV
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>  // debug
+#define DEBUG 1
+
+using namespace std::chrono;
 
 namespace face_swap
 {
@@ -40,6 +44,12 @@ namespace face_swap
         cv::Mat& vecR, cv::Mat& vecT, cv::Mat& K, bool bypass)
     {
         // Calculate shape and texture coefficients
+#if DEBUG
+        int start_ms, end_ms;
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
         if (!bypass) {
             if (m_generic)
             {
@@ -48,6 +58,12 @@ namespace face_swap
             }
             else CNN3DMM::process(img, shape_coefficients, tex_coefficients);
         }
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "Shape & Tex Regression: " << (end_ms-start_ms) << " ms" << std::endl;
+#endif
 
         // Set up face service
         //fservice->setUp(img.cols, img.rows, 1000.0f);
