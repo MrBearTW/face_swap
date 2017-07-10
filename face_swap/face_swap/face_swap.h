@@ -15,6 +15,10 @@
 // face_seg
 #include <face_seg/face_seg.h>
 
+// dlib
+#include <dlib/image_processing/frontal_face_detector.h>
+#include <dlib/image_processing/shape_predictor.h>
+
 namespace face_swap
 {
     class FaceSwap
@@ -91,6 +95,8 @@ namespace face_swap
 
     private:
 
+        void extract_landmarks(const cv::Mat& frame, std::vector<cv::Point>& landmarks);
+
 		/** Crops the image and it's corresponding segmentation according
 		to the detected face landmarks.
 		@param[in] img The image to crop.
@@ -159,6 +165,9 @@ namespace face_swap
 
 		bool m_with_gpu;
 		int m_gpu_device_id;
+
+		dlib::frontal_face_detector m_detector;
+		dlib::shape_predictor m_pose_model;
 
         Mesh m_src_mesh, m_dst_mesh;
         cv::Mat m_vecR, m_vecT, m_K;

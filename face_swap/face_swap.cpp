@@ -11,7 +11,13 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>  // Debug
 
-#define DEBUG 0
+// dlib
+#include <dlib/opencv.h>
+#include <dlib/image_processing/frontal_face_detector.h>
+#include <dlib/image_processing/render_face_detections.h>
+#include <dlib/image_processing/shape_predictor.h>
+
+#define DEBUG 1
 
 using namespace std::chrono;
 
@@ -24,8 +30,8 @@ namespace face_swap
 		m_with_gpu(with_gpu),
 		m_gpu_device_id(gpu_device_id)
     {
-        // Initialize Sequence Face Landmarks
-        m_sfl = sfl::SequenceFaceLandmarks::create(landmarks_path);
+        m_detector = dlib::get_frontal_face_detector();
+        dlib::deserialize(landmarks_path) >> m_pose_model;
 
         // Initialize CNN 3DMM with exression
         m_cnn_3dmm_expr = std::make_unique<CNN3DMMExpr>(
@@ -218,10 +224,102 @@ namespace face_swap
         return m_dst_mesh;
     }
 
+
+    void dlib_obj_to_points(const dlib::full_object_detection& obj,
+        std::vector<cv::Point>& points)
+    {
+        points.resize(obj.num_parts());
+        for (unsigned long i = 0; i < obj.num_parts(); ++i)
+        {
+            cv::Point& p = points[i];
+            const dlib::point& obj_p = obj.part(i);
+            p.x = (float)obj_p.x();
+            p.y = (float)obj_p.y();
+        }
+    }
+
+    // TODO
+    void FaceSwap::extract_landmarks(const cv::Mat& frame, std::vector<cv::Point>& landmarks)
+    {
+        // Convert OpenCV's mat to dlib format 
+        dlib::cv_image<dlib::bgr_pixel> dlib_frame(frame);
+
+        // Detect bounding boxes around all the faces in the image.
+        std::vector<dlib::rectangle> faces = m_detector(dlib_frame);
+
+        // Find the pose of each face we detected.
+        std::vector<dlib::full_object_detection> shapes;
+        //frame_landmarks.faces.resize(faces.size());
+        for (size_t i = 0; i < faces.size(); ++i)
+        {
+            dlib::rectangle& dlib_face = faces[i];
+
+            // Set landmarks
+            dlib::full_object_detection shape = m_pose_model(dlib_frame, dlib_face);
+            dlib_obj_to_points(shape, landmarks);
+        }
+    }
+
+    cv::Rect getFaceBBoxFromLandmarks(const std::vector<cv::Point>& landmarks,
+        const cv::Size& frameSize, bool square)
+    {
+        int xmin(std::numeric_limits<int>::max()), ymin(std::numeric_limits<int>::max()),
+            xmax(-1), ymax(-1), sumx(0), sumy(0);
+        for (const cv::Point& p : landmarks)
+        {
+            xmin = std::min(xmin, p.x);
+            ymin = std::min(ymin, p.y);
+            xmax = std::max(xmax, p.x);
+            ymax = std::max(ymax, p.y);
+            sumx += p.x;
+            sumy += p.y;
+        }
+
+        int width = xmax - xmin + 1;
+        int height = ymax - ymin + 1;
+        int centerx = (xmin + xmax) / 2;
+        int centery = (ymin + ymax) / 2;
+        int avgx = (int)std::round(sumx / landmarks.size());
+        int avgy = (int)std::round(sumy / landmarks.size());
+        int devx = centerx - avgx;
+        int devy = centery - avgy;
+        int dleft = (int)std::round(0.1*width) + abs(devx < 0 ? devx : 0);
+        int dtop = (int)std::round(height*(std::max(float(width) / height, 1.0f) * 2 - 1)) + abs(devy < 0 ? devy : 0);
+        int dright = (int)std::round(0.1*width) + abs(devx > 0 ? devx : 0);
+        int dbottom = (int)std::round(0.1*height) + abs(devy > 0 ? devy : 0);
+
+        // Limit to frame boundaries
+        xmin = std::max(0, xmin - dleft);
+        ymin = std::max(0, ymin - dtop);
+        xmax = std::min((int)frameSize.width - 1, xmax + dright);
+        ymax = std::min((int)frameSize.height - 1, ymax + dbottom);
+
+        // Make square
+        if (square)
+        {
+            int sq_width = std::max(xmax - xmin + 1, ymax - ymin + 1);
+            centerx = (xmin + xmax) / 2;
+            centery = (ymin + ymax) / 2;
+            xmin = centerx - ((sq_width - 1) / 2);
+            ymin = centery - ((sq_width - 1) / 2);
+            xmax = xmin + sq_width - 1;
+            ymax = ymin + sq_width - 1;
+
+            // Limit to frame boundaries
+            xmin = std::max(0, xmin);
+            ymin = std::max(0, ymin);
+            xmax = std::min((int)frameSize.width - 1, xmax);
+            ymax = std::min((int)frameSize.height - 1, ymax);
+        }
+
+        return cv::Rect(cv::Point(xmin, ymin), cv::Point(xmax, ymax));
+    }
+
     bool FaceSwap::preprocessImages(const cv::Mat& img, const cv::Mat& seg,
         std::vector<cv::Point>& landmarks, std::vector<cv::Point>& cropped_landmarks,
         cv::Mat& cropped_img, cv::Mat& cropped_seg, cv::Rect& bbox)
     {
+        std::cout << "Enter Preprocess"  << std::endl;
 #if DEBUG
         int start_ms, end_ms;
         start_ms = duration_cast< milliseconds >(
@@ -229,13 +327,9 @@ namespace face_swap
         ).count();
 #endif
         // Calculate landmarks
-        m_sfl->clear();
-        const sfl::Frame& lmsFrame = m_sfl->addFrame(img);
-        if (lmsFrame.faces.empty()) return false;
-        //std::cout << "faces found = " << lmsFrame.faces.size() << std::endl;    // Debug
-        const sfl::Face* face = lmsFrame.getFace(sfl::getMainFaceID(m_sfl->getSequence()));
-        landmarks = face->landmarks; // Debug
-        cropped_landmarks = landmarks; 
+        extract_landmarks(img, landmarks);
+        cropped_landmarks = landmarks;
+        if (landmarks.empty()) return false;
 #if DEBUG
         end_ms = duration_cast< milliseconds >(
             system_clock::now().time_since_epoch()
@@ -245,7 +339,7 @@ namespace face_swap
 
 
         // Calculate crop bounding box
-        bbox = sfl::getFaceBBoxFromLandmarks(landmarks, img.size(), true);
+        bbox = getFaceBBoxFromLandmarks(landmarks, img.size(), true);
         bbox.width = bbox.width / 4 * 4;    // Make sure cropped image is dividable by 4
         bbox.height = bbox.height / 4 * 4;
 
