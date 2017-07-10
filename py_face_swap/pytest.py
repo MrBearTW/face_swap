@@ -21,7 +21,7 @@ def main():
         print 'Initialization failed!'
         return
     pfs.loadModels(landmarks, model_3dmm_h5, model_3dmm_dat, reg_model, reg_deploy,\
-            reg_mean, seg_model, seg_deploy, 0, 1, 0, 1)
+            reg_mean, seg_model, seg_deploy, 0, 1, 1, 0)
 
     sourceImg = cv2.imread(source)
     targetImg = cv2.imread(target)
@@ -32,10 +32,10 @@ def main():
     result = []
 
     iterNum = 1
-    start = time.time()
     if ( pfs.setSourceImg(sourceImg) ):
         print 'Set Source Image Failed!'
         return
+    start = time.time()
     for _ in range(iterNum):
         if ( pfs.setTargetImg(targetImg, False) ):
             print 'Set Target Image Failed!'
@@ -43,7 +43,7 @@ def main():
         unblended = renderer.swap(pfs.getFs())
         result = pfs.blend(unblended)
     swap = time.time()-start
-    print 'swap spent: {}'.format(swap/float(iterNum))
+    print 'Set target spent: {}'.format(swap/float(iterNum))
 
     cv2.imwrite('/root/face_swap/data/output/test.jpg', result)
 
