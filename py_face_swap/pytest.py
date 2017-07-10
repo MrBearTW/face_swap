@@ -37,7 +37,7 @@ def main():
         print 'Set Source Image Failed!'
         return
     for _ in range(iterNum):
-        if ( pfs.setTargetImg(targetImg) ):
+        if ( pfs.setTargetImg(targetImg, False) ):
             print 'Set Target Image Failed!'
             return
         unblended = renderer.swap(pfs.getFs())
