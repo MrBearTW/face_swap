@@ -47,7 +47,7 @@ namespace face_swap
 		@param[out] tex_coefficients PCA texture coefficients.
 		*/
         void process(const cv::Mat& img, 
-            cv::Mat& shape_coefficients, cv::Mat& tex_coefficients);
+            cv::Mat& shape_coefficients, cv::Mat& tex_coefficients, cv::Mat& expr_coefficients);
 
     private:
         void wrapInputLayer(std::vector<cv::Mat>& input_channels);

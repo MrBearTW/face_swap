@@ -28,13 +28,12 @@ namespace face_swap
 		@param mean_file Path to 3DMM regression CNN mean file (.binaryproto).
 		@param model_file Path to 3DMM file (.dat).
 		@param generic Use generic model without shape regression.
-		@param with_expr Toggle fitting face expressions.
 		@param with_gpu Toggle GPU\CPU execution.
 		@param gpu_device_id Set the GPU's device id.
 		*/
         CNN3DMMExpr(const std::string& deploy_file, const std::string& caffe_model_file,
             const std::string& mean_file, const std::string& model_file,
-            bool generic = false, bool with_expr = true, bool highQual = true,
+            bool generic = false, bool highQual = true,
 			bool with_gpu = true, int gpu_device_id = 0);
 
 		/** Destructor.
@@ -56,7 +55,7 @@ namespace face_swap
             cv::Mat& expr_coefficients, cv::Mat& vecR, cv::Mat& vecT, cv::Mat& K, bool bypass = false);
     private:
         std::unique_ptr<FaceServices2> fservice;
-        bool m_generic, m_with_expr, m_highQual;
+        bool m_generic, m_highQual;
     };
 
 }   // namespace face_swap

@@ -11,7 +11,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>  // Debug
 
-#define DEBUG 1
+#define DEBUG 0
 
 using namespace std::chrono;
 
@@ -20,7 +20,7 @@ namespace face_swap
     FaceSwap::FaceSwap(const std::string& landmarks_path, const std::string& model_3dmm_h5_path,
         const std::string& model_3dmm_dat_path, const std::string& reg_model_path,
         const std::string& reg_deploy_path, const std::string& reg_mean_path,
-        bool generic, bool with_expr, bool highQual, bool with_gpu, int gpu_device_id) :
+        bool generic, bool highQual, bool with_gpu, int gpu_device_id) :
 		m_with_gpu(with_gpu),
 		m_gpu_device_id(gpu_device_id)
     {
@@ -30,7 +30,7 @@ namespace face_swap
         // Initialize CNN 3DMM with exression
         m_cnn_3dmm_expr = std::make_unique<CNN3DMMExpr>(
 			reg_deploy_path, reg_model_path, reg_mean_path, model_3dmm_dat_path,
-			generic, with_expr, highQual, with_gpu, gpu_device_id);
+			generic, highQual, with_gpu, gpu_device_id);
 
         // Load Basel 3DMM
         m_basel_3dmm = std::make_unique<Basel3DMM>();

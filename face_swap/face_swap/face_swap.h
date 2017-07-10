@@ -28,14 +28,13 @@ namespace face_swap
 		@param reg_deploy_path Path to 3DMM regression CNN deploy file (.prototxt).
 		@param reg_mean_path Path to 3DMM regression CNN mean file (.binaryproto).
 		@param generic Use generic model without shape regression.
-		@param with_expr Toggle fitting face expressions.
 		@param with_gpu Toggle GPU\CPU execution.
 		@param gpu_device_id Set the GPU's device id.
 		*/
         FaceSwap(const std::string& landmarks_path, const std::string& model_3dmm_h5_path,
             const std::string& model_3dmm_dat_path, const std::string& reg_model_path,
             const std::string& reg_deploy_path, const std::string& reg_mean_path,
-            bool generic = false, bool with_expr = true, bool highQual = true,
+            bool generic = false, bool highQual = true,
             bool with_gpu = true, int gpu_device_id = 0);
 
 		/**	Set segmentation model.

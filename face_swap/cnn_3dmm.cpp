@@ -34,7 +34,7 @@ CNN3DMM::CNN3DMM(const string& deploy_file, const string& caffe_model_file,
     m_net->CopyTrainedLayersFrom(caffe_model_file);
 
     CHECK_EQ(m_net->num_inputs(), 1) << "Network should have exactly one input.";
-    CHECK_EQ(m_net->num_outputs(), 1) << "Network should have exactly one output.";
+    CHECK_EQ(m_net->num_outputs(), 2) << "Network should have exactly two output.";
 
     Blob<float>* input_layer = m_net->input_blobs()[0];
     m_num_channels = input_layer->channels();
@@ -47,7 +47,7 @@ CNN3DMM::CNN3DMM(const string& deploy_file, const string& caffe_model_file,
 }
 
 void CNN3DMM::process(const cv::Mat& img,
-    cv::Mat& shape_coefficients, cv::Mat& tex_coefficients)
+    cv::Mat& shape_coefficients, cv::Mat& tex_coefficients, cv::Mat& expr_coefficients)
 {
     // Prepare input data
     cv::Mat img_processed = preprocess(img);
@@ -59,6 +59,8 @@ void CNN3DMM::process(const cv::Mat& img,
 	float* featues = m_net->blob_by_name("fc_ftnew")->mutable_cpu_data();
     shape_coefficients = cv::Mat_<float>(99, 1, featues).clone();
     tex_coefficients = cv::Mat_<float>(99, 1, featues + 99).clone();
+	float* exprs = m_net->blob_by_name("fc_exp")->mutable_cpu_data();
+    expr_coefficients = cv::Mat_<float>(29, 1, exprs).clone();
 }
 
 CNN3DMM::~CNN3DMM()

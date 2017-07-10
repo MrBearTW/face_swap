@@ -9,7 +9,7 @@
 //#include <Eigen/SPQRSupport>
 #include <omp.h>
 #include <chrono>
-#define DEBUG 1
+#define DEBUG 0
 
 using namespace std;
 using namespace cv;
@@ -637,7 +637,7 @@ void FaceServices2::mergeIm(cv::Mat* output,cv::Mat bg,cv::Mat depth){
 
 
 
-bool FaceServices2::estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha, cv::Mat &vecR, cv::Mat &vecT, cv::Mat& K, cv::Mat &exprW, const char* outputDir, bool with_expr, bool highQual){
+bool FaceServices2::estimatePose(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha, cv::Mat &vecR, cv::Mat &vecT, cv::Mat& K, bool highQual){
     int start_ms, end_ms;
 	char text[200];
 	float renderParams[RENDER_PARAMS_COUNT];
@@ -646,7 +646,6 @@ bool FaceServices2::estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha
     K = k_m.clone();    // Yuval
 	BFMParams params;
 	params.init();
-	exprW = cv::Mat::zeros(29,1,CV_32F);
 	cv::Mat prevR;
 	cv::Mat prevT;
 
@@ -694,99 +693,9 @@ bool FaceServices2::estimatePoseExpr(cv::Mat colorIm, cv::Mat lms, cv::Mat alpha
             landModel.at<float>(i,2) = landModel0.at<float>(ind,2);
             landIm.at<float>(i,0) = lms.at<float>(ind,0);
             landIm.at<float>(i,1) = lms.at<float>(ind,1);
-            //cv::circle(tmpIm,Point(landIm.at<float>(i,0),landIm.at<float>(i,1)),2,Scalar(255,0,0),2);
         }
-        //sprintf(text,"%s/withLM.png",outputDir);
-        //imwrite(text,tmpIm);
-        //sprintf(text,"%s/%s_withLM.ply",outputDir,filename.c_str());
-        //write_plyFloat(text,landModel.t());
-        //getchar();
-
         festimator.estimatePose3D0(landModel,landIm,k_m,vecR,vecT);
     }
-
-    // Yuval
-    if (!with_expr) return true;
-	
-	for (int i=0;i<3;i++)
-		params.initR[RENDER_PARAMS_R+i] = vecR.at<float>(i,0);
-	for (int i=0;i<3;i++)
-		params.initR[RENDER_PARAMS_T+i] = vecT.at<float>(i,0);
-	memcpy(renderParams,params.initR,sizeof(float)*RENDER_PARAMS_COUNT);
-
-	for (int i=60;i<68;i++) lmVisInd.push_back(i);
-	landIm = cv::Mat::zeros( lmVisInd.size(),2,CV_32F);
-	for (int i=0;i<lmVisInd.size();i++){
-		int ind = lmVisInd[i];
-		landIm.at<float>(i,0) = lms.at<float>(ind,0);
-		landIm.at<float>(i,1) = lms.at<float>(ind,1);
-	}
-
-	float bCost, cCost, fCost;
-	bCost = 10000.0f;
-    int maxIter, maxOpIter;
-    if (highQual) {
-        maxIter = 400;
-        maxOpIter = 60;
-    }
-    else { 
-        maxIter = 20;
-        maxOpIter = 20;
-    }
-
-	memset(params.sF,0,sizeof(float)*NUM_EXTRA_FEATURES);
-
-	params.sI = 0.0;
-	params.sF[FEATURES_LANDMARK] = 8.0f;
-	Mat alpha0;
-	int iter=0;
-	int badCount = 0;
-	memset(params.doOptimize,true,sizeof(bool)*6);
-
-	int EM = 29;
-	float renderParams_tmp[RENDER_PARAMS_COUNT];
-
-#if DEBUG
-        start_ms = duration_cast< milliseconds >(
-            system_clock::now().time_since_epoch()
-        ).count();
-#endif
-	params.optimizeAB[0] = params.optimizeAB[1] = false;
-    for (;iter<maxOpIter;iter++) {
-        if (iter%20 == 0) {
-            cCost = updateHessianMatrix(false, alpha,renderParams,faces,colorIm,lmVisInd,landIm,params, prevR, prevT, exprW);
-            if (countFail > 10) {
-                countFail = 0;
-                break;
-            }
-            prevEF = cEF;
-        }
-        sno_step2(false, alpha, renderParams, faces,colorIm,lmVisInd,landIm,params,exprW,prevR, prevT);
-    }
-	memset(params.doOptimize,false,sizeof(bool)*6);countFail = 0;
-	for (;iter<maxIter;iter++) {
-        if (iter%maxOpIter == 0) {
-            cCost = updateHessianMatrix(false, alpha,renderParams,faces,colorIm,lmVisInd,landIm,params, prevR, prevT, exprW);
-            if (countFail > 10) {
-                countFail = 0;
-                break;
-            }
-            prevEF = cEF;
-        }
-        sno_step2(false, alpha, renderParams, faces,colorIm,lmVisInd,landIm,params,exprW,prevR, prevT);
-    }
-#if DEBUG
-        end_ms = duration_cast< milliseconds >(
-            system_clock::now().time_since_epoch()
-        ).count();
-        std::cout << "Expression Estimation: " << (end_ms-start_ms) << " ms" << std::endl;
-#endif
-
-	///for (int i=0;i<3; i++) vecR.at<float>(i,0) = renderParams[i];
-	///for (int i=0;i<3; i++) vecT.at<float>(i,0) = renderParams[i+3];
-	//std::cout << "vecR " << vecR << std::endl;
-	//std::cout << "vecT " << vecT << std::endl;
-	//std::cout << "exprW " << exprW << std::endl;
 
     return true;
 }
