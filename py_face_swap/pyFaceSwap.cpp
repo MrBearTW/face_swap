@@ -15,7 +15,6 @@
 
 #define PY_ARRAY_UNIQUE_SYMBOL pbcvt_ARRAY_API
 #include "pyboostcvconverter.hpp"
-#include "pyFaceRenderer.hpp"
 
 using namespace boost::python;
 using std::cout;
