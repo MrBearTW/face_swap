@@ -91,8 +91,6 @@ find_package(PythonLibs 2.7 REQUIRED)
 add_subdirectory(cv_gl)
 add_subdirectory(iris_sfs)
 add_subdirectory(face_swap)
-add_subdirectory(face_swap_image)
-add_subdirectory(face_swap_batch)
 add_subdirectory(py_face_swap)
 
 # Documentation

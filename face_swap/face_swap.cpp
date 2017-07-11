@@ -30,6 +30,7 @@ namespace face_swap
 		m_with_gpu(with_gpu),
 		m_gpu_device_id(gpu_device_id)
     {
+        m_tracker = KCFTracker(true, false, true, false);
         m_detector = dlib::get_frontal_face_detector();
         dlib::deserialize(landmarks_path) >> m_pose_model;
 
@@ -135,7 +136,7 @@ namespace face_swap
         return true;
     }
 
-    bool FaceSwap::setTarget(const cv::Mat& img, const cv::Mat& seg, bool bypass)
+    bool FaceSwap::setTarget(const cv::Mat& img, const cv::Mat& seg, bool bypass, bool init_track)
     {
         m_target_img = img;
         //m_target_seg = seg;
@@ -145,7 +146,7 @@ namespace face_swap
         cv::Mat cropped_img, cropped_seg;
         if (!bypass) {
             if (!preprocessImages(img, seg, m_tgt_landmarks, cropped_landmarks,
-                cropped_img, cropped_seg, m_target_bbox))
+                cropped_img, cropped_seg, m_target_bbox, init_track))
                 return false;
             m_tgt_cropped_img = cropped_img;
         }
@@ -239,10 +240,13 @@ namespace face_swap
     }
 
     // TODO
-    void FaceSwap::extract_landmarks(const cv::Mat& frame, std::vector<cv::Point>& landmarks)
+    void FaceSwap::extract_landmarks(const cv::Mat& frame, std::vector<cv::Point>& landmarks, bool init)
     {
         // Convert OpenCV's mat to dlib format 
         dlib::cv_image<dlib::bgr_pixel> dlib_frame(frame);
+        cv::Rect result;
+        dlib::rectangle face;
+        bool hasFace = false;
 
 #if DEBUG
         int start_ms, end_ms;
@@ -250,8 +254,20 @@ namespace face_swap
             system_clock::now().time_since_epoch()
         ).count();
 #endif
-        // Detect bounding boxes around all the faces in the image.
-        std::vector<dlib::rectangle> faces = m_detector(dlib_frame);
+        if (!init) {
+			result = m_tracker.update(frame);
+            face = dlib::rectangle(result.tl().x, result.tl().y,
+                                result.br().x, result.br().y);
+            hasFace = true;
+        }
+        else {
+            // Detect bounding boxes around all the faces in the image.
+            std::vector<dlib::rectangle> faces = m_detector(dlib_frame);
+            if (faces.size()) {
+                face = faces[0];
+                hasFace = true;
+            }
+        }
 #if DEBUG
         end_ms = duration_cast< milliseconds >(
             system_clock::now().time_since_epoch()
@@ -264,15 +280,14 @@ namespace face_swap
             system_clock::now().time_since_epoch()
         ).count();
 #endif
-        // Find the pose of each face we detected.
-        std::vector<dlib::full_object_detection> shapes;
         //frame_landmarks.faces.resize(faces.size());
-        for (size_t i = 0; i < faces.size(); ++i)
-        {
-            dlib::rectangle& dlib_face = faces[i];
-
+        if (hasFace) {
+            if (init) {
+                m_tracker.init( cv::Rect(face.left(), face.top(),
+                            face.width(), face.height()), frame );
+            }
             // Set landmarks
-            dlib::full_object_detection shape = m_pose_model(dlib_frame, dlib_face);
+            dlib::full_object_detection shape = m_pose_model(dlib_frame, face);
             dlib_obj_to_points(shape, landmarks);
         }
 #if DEBUG
@@ -340,14 +355,14 @@ namespace face_swap
 
     bool FaceSwap::preprocessImages(const cv::Mat& img, const cv::Mat& seg,
         std::vector<cv::Point>& landmarks, std::vector<cv::Point>& cropped_landmarks,
-        cv::Mat& cropped_img, cv::Mat& cropped_seg, cv::Rect& bbox)
+        cv::Mat& cropped_img, cv::Mat& cropped_seg, cv::Rect& bbox, bool init_track)
     {
         std::cout << "Enter Preprocess"  << std::endl;
 #if DEBUG
         int start_ms, end_ms;
 #endif
         // Calculate landmarks
-        extract_landmarks(img, cropped_landmarks);
+        extract_landmarks(img, cropped_landmarks, init_track);
         if (cropped_landmarks.empty()) return false;
 
 

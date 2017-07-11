@@ -30,6 +30,7 @@ target_include_directories(face_swap PUBLIC
 target_link_libraries(face_swap PUBLIC
 	cv_gl
 	iris_sfs
+    KCF
 	${Boost_LIBRARIES}
 	${OpenCV_LIBS}
 	${FIND_FACE_LANDMARKS_LIBRARIES}

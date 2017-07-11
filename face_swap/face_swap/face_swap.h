@@ -19,6 +19,9 @@
 #include <dlib/image_processing/frontal_face_detector.h>
 #include <dlib/image_processing/shape_predictor.h>
 
+// KCF Tracker
+#include <kcftracker.hpp>
+
 namespace face_swap
 {
     class FaceSwap
@@ -66,7 +69,7 @@ namespace face_swap
 
 		/**	Set target image and segmentation.
 		*/
-        bool setTarget(const cv::Mat& img, const cv::Mat& seg = cv::Mat(), bool bypass = false);
+        bool setTarget(const cv::Mat& img, const cv::Mat& seg = cv::Mat(), bool bypass = false, bool init_track = true);
 
 		/**	Transfer the face from the source image onto the face in the target image.
 		*/
@@ -95,7 +98,7 @@ namespace face_swap
 
     private:
 
-        void extract_landmarks(const cv::Mat& frame, std::vector<cv::Point>& landmarks);
+        void extract_landmarks(const cv::Mat& frame, std::vector<cv::Point>& landmarks, bool init);
 
 		/** Crops the image and it's corresponding segmentation according
 		to the detected face landmarks.
@@ -110,7 +113,7 @@ namespace face_swap
 		*/
         bool preprocessImages(const cv::Mat& img, const cv::Mat& seg,
             std::vector<cv::Point>& landmarks, std::vector<cv::Point>& cropped_landmarks,
-            cv::Mat& cropped_img, cv::Mat& cropped_seg, cv::Rect& bbox);
+            cv::Mat& cropped_img, cv::Mat& cropped_seg, cv::Rect& bbox, bool init_track = true);
 
 		/** Crops the image and it's corresponding segmentation according
 		to the detected face landmarks.
@@ -166,6 +169,8 @@ namespace face_swap
 		bool m_with_gpu;
 		int m_gpu_device_id;
 
+        // HOG, FixWindow, MultiScale, TunedParam
+        KCFTracker m_tracker;
 		dlib::frontal_face_detector m_detector;
 		dlib::shape_predictor m_pose_model;
 

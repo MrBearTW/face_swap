@@ -19,6 +19,7 @@ class FsProcessor(Processor):
         self.counter = 0
         self.lastFrame = None
         self.firstFrame = True
+        self.init_track = True
 
     def on_end(self, session_id):
         print ">>> Processor ended: %d <<<" % (session_id, )
@@ -31,7 +32,7 @@ class FsProcessor(Processor):
 
     def on_image_frame(self, session_id, stream_id, t, image_frame, metadata):        
 
-        global g_producerSem, g_resImg, g_tgtImg, g_producerEvent, g_consumerEvent, g_bypass
+        global g_producerSem, g_resImg, g_tgtImg, g_producerEvent, g_consumerEvent, g_bypass, g_init_track
         print 'Receive Frame'
 
         start = time.time()
@@ -53,6 +54,7 @@ class FsProcessor(Processor):
             g_bypass = False
         else:
             g_bypass = True
+        g_init_track = self.init_track
         g_consumerEvent.set()
         g_producerEvent.wait()
         g_producerEvent.clear()
@@ -61,10 +63,14 @@ class FsProcessor(Processor):
         g_producerSem.release()
 
         if not failed:
-            rszRes = cv2.resize(result, image_frame.size, interpolation=cv2.INTER_LINEAR)
-            rszRes = cv2.cvtColor(rszRes, cv2.COLOR_BGR2RGB)
-            self.counter = self.counter + 1
-            self.lastFrame = (Image.fromarray(rszRes), metadata)
+            self.init_track = False
+            if type(result) == type(None):
+                self.init_track = True
+            else:
+                rszRes = cv2.resize(result, image_frame.size, interpolation=cv2.INTER_LINEAR)
+                rszRes = cv2.cvtColor(rszRes, cv2.COLOR_BGR2RGB)
+                self.counter = self.counter + 1
+                self.lastFrame = (Image.fromarray(rszRes), metadata)
         else:
             self.counter = 0
         self.send_image_frame(self.lastFrame[0], self.lastFrame[1])
@@ -102,7 +108,7 @@ class Renderer(threading.Thread):
             g_consumerEvent.clear()
             ## Render
             sys.stderr.write('Got something to render...\n')
-            if ( not self.pfs.setTargetImg(g_tgtImg, g_bypass) ):
+            if ( not self.pfs.setTargetImg(g_tgtImg, g_bypass, g_init_track) ):
                 g_failed = False
                 g_resImg = self.pfs.swap()
             else:
@@ -130,6 +136,7 @@ if __name__ == '__main__':
     source = '/root/face_swap/data/images/brad_pitt_01.jpg'     # source image
 
     # Five global variables for synchronization
+    g_init_track = True
     g_failed = False
     g_tgtImg = None
     g_resImg = None

@@ -21,7 +21,7 @@ class PyFaceSwap {
         ~PyFaceSwap();
         int createCtx(int argc, PyObject *arglst);
         int setSourceImg(PyObject *pyImg);
-        int setTargetImg(PyObject *pyImg, bool bypass = false);
+        int setTargetImg(PyObject *pyImg, bool bypass = false, bool init_tracker = true);
         PyObject* swap();
 
         void loadModels(string landmarks_path, string model_3dmm_h5_path, string model_3dmm_dat_path,
