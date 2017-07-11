@@ -13,7 +13,7 @@
 // OpenCV
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>  // debug
-#define DEBUG 0
+#define DEBUG 1
 
 using namespace std::chrono;
 

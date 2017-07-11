@@ -244,9 +244,26 @@ namespace face_swap
         // Convert OpenCV's mat to dlib format 
         dlib::cv_image<dlib::bgr_pixel> dlib_frame(frame);
 
+#if DEBUG
+        int start_ms, end_ms;
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
         // Detect bounding boxes around all the faces in the image.
         std::vector<dlib::rectangle> faces = m_detector(dlib_frame);
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "Face detection : " << (end_ms-start_ms) << " ms" << std::endl;
+#endif
 
+#if DEBUG
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
         // Find the pose of each face we detected.
         std::vector<dlib::full_object_detection> shapes;
         //frame_landmarks.faces.resize(faces.size());
@@ -258,6 +275,12 @@ namespace face_swap
             dlib::full_object_detection shape = m_pose_model(dlib_frame, dlib_face);
             dlib_obj_to_points(shape, landmarks);
         }
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "Landmark detection : " << (end_ms-start_ms) << " ms" << std::endl;
+#endif
     }
 
     cv::Rect getFaceBBoxFromLandmarks(const std::vector<cv::Point>& landmarks,
@@ -322,19 +345,10 @@ namespace face_swap
         std::cout << "Enter Preprocess"  << std::endl;
 #if DEBUG
         int start_ms, end_ms;
-        start_ms = duration_cast< milliseconds >(
-            system_clock::now().time_since_epoch()
-        ).count();
 #endif
         // Calculate landmarks
         extract_landmarks(img, cropped_landmarks);
         if (cropped_landmarks.empty()) return false;
-#if DEBUG
-        end_ms = duration_cast< milliseconds >(
-            system_clock::now().time_since_epoch()
-        ).count();
-        std::cout << "Landmark calculation: " << (end_ms-start_ms) << " ms" << std::endl;
-#endif
 
 
         // Calculate crop bounding box
