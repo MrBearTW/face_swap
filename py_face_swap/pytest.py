@@ -16,12 +16,11 @@ def main():
     target = '/root/face_swap/data/images/795.jpg'  # target image
 
     pfs = pyfaceswap.PyFaceSwap()
-    renderer = pyfaceswap.PyFaceRenderer()
-    if( renderer.createCtx(len(sys.argv), sys.argv) ):
+    if( pfs.createCtx(len(sys.argv), sys.argv) ):
         print 'Initialization failed!'
         return
     pfs.loadModels(landmarks, model_3dmm_h5, model_3dmm_dat, reg_model, reg_deploy,\
-            reg_mean, seg_model, seg_deploy, 0, 1, 1)
+            reg_mean, seg_model, seg_deploy, 0, 1, 0)
 
     sourceImg = cv2.imread(source)
     targetImg = cv2.imread(target)
@@ -31,7 +30,7 @@ def main():
     
     result = []
 
-    iterNum = 1
+    iterNum = 5
     if ( pfs.setSourceImg(sourceImg) ):
         print 'Set Source Image Failed!'
         return
@@ -40,14 +39,12 @@ def main():
         if ( pfs.setTargetImg(targetImg, False) ):
             print 'Set Target Image Failed!'
             return
-        unblended = renderer.swap(pfs.getFs())
-        result = pfs.blend(unblended)
+        result = pfs.swap()
     swap = time.time()-start
     print 'Set target spent: {}'.format(swap/float(iterNum))
 
     cv2.imwrite('/root/face_swap/data/output/test.jpg', result)
 
-    del renderer
     del pfs
 
 if __name__ == '__main__':

@@ -32,6 +32,7 @@ class FsProcessor(Processor):
     def on_image_frame(self, session_id, stream_id, t, image_frame, metadata):        
 
         global g_producerSem, g_resImg, g_tgtImg, g_producerEvent, g_consumerEvent, g_bypass
+        print 'Receive Frame'
 
         start = time.time()
         if self.firstFrame:
@@ -80,9 +81,12 @@ class Renderer(threading.Thread):
         global g_producerSem, g_resImg, g_tgtImg, g_producerEvent, g_consumerEvent, g_failed
 
         self.pfs = pyfaceswap.PyFaceSwap()
+        if( self.pfs.createCtx(len(sys.argv), sys.argv) ):
+            sys.stderr.write('Initialization failed!\n')
 
         self.pfs.loadModels(landmarks, model_3dmm_h5, model_3dmm_dat, reg_model, reg_deploy,\
                 reg_mean, seg_model, seg_deploy, genericFace, highQual, gpuId)
+
 
         sourceImg = cv2.imread(source)
         srcRszRatio = targetHeight / sourceImg.shape[0]
@@ -90,12 +94,6 @@ class Renderer(threading.Thread):
                 interpolation=cv2.INTER_LINEAR)
         if ( self.pfs.setSourceImg(rszSrcImg) ):
             sys.stderr.write('Set Source Image Failed!\n')
-
-        self.renderer = pyfaceswap.PyFaceRenderer()
-        if( self.renderer.createCtx(len(sys.argv), sys.argv) ):
-            sys.stderr.write('Initialization failed!\n')
-
-        fs = self.pfs.getFs()
 
         while True:
             ## Wait for lock
@@ -106,8 +104,7 @@ class Renderer(threading.Thread):
             sys.stderr.write('Got something to render...\n')
             if ( not self.pfs.setTargetImg(g_tgtImg, g_bypass) ):
                 g_failed = False
-                unblended = self.renderer.swap(fs)
-                g_resImg = self.pfs.blend(unblended)
+                g_resImg = self.pfs.swap()
             else:
                 g_failed = True
             g_producerEvent.set()

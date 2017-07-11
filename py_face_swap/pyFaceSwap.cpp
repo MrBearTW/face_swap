@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-#include <boost/python.hpp>
+#include <boost/shared_ptr.hpp>
 #include "pyFaceSwap.hpp"
 #include "face_swap/face_swap.h"
 
@@ -26,7 +26,10 @@ PyFaceSwap::PyFaceSwap() {
 }
 
 PyFaceSwap::~PyFaceSwap() {
-    if (fs) delete fs;
+    if (surface) delete surface;
+    if (openGLContext) delete openGLContext;
+    if (surfaceFormat) delete surfaceFormat;
+    if (a) delete a;
 }
 
 void PyFaceSwap::loadModels(string landmarks_path, string model_3dmm_h5_path, string model_3dmm_dat_path,
@@ -35,9 +38,10 @@ void PyFaceSwap::loadModels(string landmarks_path, string model_3dmm_h5_path, st
         int gpu_device_id) {
 
     const bool with_gpu = 1;
-    fs = new face_swap::FaceSwap(landmarks_path, model_3dmm_h5_path, model_3dmm_dat_path,
+
+    fs = boost::shared_ptr<face_swap::FaceSwap>( new face_swap::FaceSwap(landmarks_path, model_3dmm_h5_path, model_3dmm_dat_path,
             reg_model_path, reg_deploy_path, reg_mean_path, generic, highQual,
-            with_gpu, (int)gpu_device_id);
+            with_gpu, (int)gpu_device_id) );
 
     fs->setSegmentationModel(seg_model_path, seg_deploy_path);
 }
@@ -63,23 +67,53 @@ int PyFaceSwap::setTargetImg(PyObject* pyImg, bool bypass) {
     return 0;
 }
 
-PyObject* PyFaceSwap::getFs() {
-    return (PyObject*)fs;
+int PyFaceSwap::createCtx(int argc, PyObject *arglst) {
+
+    size_t cnt = PyList_GET_SIZE(arglst);
+    char **argv = new char*[cnt + 1];
+    for (size_t i = 0; i < cnt; i++) {
+        PyObject *s = PyList_GET_ITEM(arglst, i);
+        assert (PyString_Check(s));     // likewise
+        size_t len = PyString_GET_SIZE(s);
+        char *copy = new char[len + 1];
+        memcpy(copy, PyString_AS_STRING(s), len + 1);
+        argv[i] = copy;
+    }
+    argv[cnt] = NULL;
+
+    // Intialize OpenGL context
+    a = new QApplication(argc, argv);
+    for (size_t i = 0; i < cnt; i++)
+        delete [] argv[i];
+    delete [] argv;
+
+    surfaceFormat = new QSurfaceFormat;
+    surfaceFormat->setMajorVersion(1);
+    surfaceFormat->setMinorVersion(5);
+
+    openGLContext = new QOpenGLContext;
+    openGLContext->setFormat(*surfaceFormat);
+    openGLContext->create();
+    if (!openGLContext->isValid()) return -1;
+
+    surface = new QOffscreenSurface;
+    surface->setFormat(*surfaceFormat);
+    surface->create();
+    if (!surface->isValid()) return -2;
+
+    openGLContext->makeCurrent(surface);
+
+    // Initialize GLEW
+    GLenum err = glewInit();
+    if (GLEW_OK != err) return -3;
+
+    return 0;
 }
 
-PyObject* PyFaceSwap::blend(PyObject *pyImg) {
-    cv::Mat rendered_img, blended_img;
-    rendered_img = pbcvt::fromNDArrayToMat(pyImg);
-
-    cv::Mat target_img = fs->getTargetImg();
-    cv::Mat target_seg = fs->getTargetSeg();
-    cv::Rect target_bbox = fs->getTargetBbox();
-
-    cv::Mat tgt_rendered_img = cv::Mat::zeros(target_img.size(), CV_8UC3);
-    rendered_img.copyTo(tgt_rendered_img(target_bbox));
-
-    blended_img = fs->blend(tgt_rendered_img, target_img, target_seg);
-    PyObject *ret = pbcvt::fromMatToNDArray(blended_img);
+PyObject* PyFaceSwap::swap() {
+    cv::Mat rendered_img;
+    rendered_img = fs->swap();
+    PyObject *ret = pbcvt::fromMatToNDArray(rendered_img);
     return ret;
 }
 
@@ -98,12 +132,7 @@ BOOST_PYTHON_MODULE(pyfaceswap)
         .def("loadModels", &PyFaceSwap::loadModels)
         .def("setSourceImg", &PyFaceSwap::setSourceImg)
         .def("setTargetImg", &PyFaceSwap::setTargetImg)
-        .def("blend", &PyFaceSwap::blend)
-        .def("getFs", &PyFaceSwap::getFs)
-        ;
-    class_<PyFaceRenderer>("PyFaceRenderer", init<>())
-        .def(init<>())
-        .def("createCtx", &PyFaceRenderer::createCtx)
-        .def("swap", &PyFaceRenderer::swap)
+        .def("createCtx", &PyFaceSwap::createCtx)
+        .def("swap", &PyFaceSwap::swap)
         ;
 }

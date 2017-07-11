@@ -327,9 +327,8 @@ namespace face_swap
         ).count();
 #endif
         // Calculate landmarks
-        extract_landmarks(img, landmarks);
-        cropped_landmarks = landmarks;
-        if (landmarks.empty()) return false;
+        extract_landmarks(img, cropped_landmarks);
+        if (cropped_landmarks.empty()) return false;
 #if DEBUG
         end_ms = duration_cast< milliseconds >(
             system_clock::now().time_since_epoch()
@@ -339,7 +338,7 @@ namespace face_swap
 
 
         // Calculate crop bounding box
-        bbox = getFaceBBoxFromLandmarks(landmarks, img.size(), true);
+        bbox = getFaceBBoxFromLandmarks(cropped_landmarks, img.size(), true);
         bbox.width = bbox.width / 4 * 4;    // Make sure cropped image is dividable by 4
         bbox.height = bbox.height / 4 * 4;
 
