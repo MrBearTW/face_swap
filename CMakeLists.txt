@@ -50,9 +50,6 @@ find_package(Boost REQUIRED filesystem program_options regex timer)
 # OpenCV
 find_package(OpenCV REQUIRED highgui imgproc imgcodecs calib3d photo)
 
-# sfl
-find_package(find_face_landmarks REQUIRED)
-
 # face_segmentation
 find_package(face_segmentation REQUIRED)
 
