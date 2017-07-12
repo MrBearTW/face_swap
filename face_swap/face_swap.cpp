@@ -17,7 +17,7 @@
 #include <dlib/image_processing/render_face_detections.h>
 #include <dlib/image_processing/shape_predictor.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 using namespace std::chrono;
 
@@ -477,14 +477,6 @@ namespace face_swap
         if (minc >= maxc || minr >= maxr) return cv::Mat();
         cv::Point center((minc + maxc) / 2, (minr + maxr) / 2);
 
-        /// Debug ///
-        //cv::Mat out = src.clone();
-        //cv::rectangle(out, cv::Point(minc, minr), cv::Point(maxc, maxr), cv::Scalar(255, 0, 0));
-        //cv::imshow("target", out);
-        //cv::imshow("mask", mask);
-        //cv::waitKey(0);
-        /////////////
-
         // Do blending
         cv::Mat blend;
         cv::seamlessClone(src, dst, mask, center, blend, cv::NORMAL_CLONE);
@@ -522,123 +514,6 @@ namespace face_swap
 
     cv::Rect FaceSwap::getTargetBbox() {
         return m_target_bbox;
-    }
-
-    cv::Mat FaceSwap::debug()
-    {
-        cv::Mat src_d = debugSource();
-        cv::Mat tgt_d = debugTarget();
-        cv::Size max_size(std::max(src_d.cols, tgt_d.cols), 
-            std::max(src_d.rows, tgt_d.rows));
-
-        cv::Mat src_d_out = cv::Mat::zeros(max_size, CV_8UC3);
-        cv::Mat tgt_d_out = cv::Mat::zeros(max_size, CV_8UC3);
-        src_d.copyTo(src_d_out(cv::Rect(0, 0, src_d.cols, src_d.rows)));
-        tgt_d.copyTo(tgt_d_out(cv::Rect(0, 0, tgt_d.cols, tgt_d.rows)));
-        cv::Mat out;
-        cv::hconcat(src_d_out, tgt_d_out, out);
-        return out;
-    }
-
-    cv::Mat FaceSwap::debugSourceMesh()
-    {
-        return debugMesh(m_src_cropped_img, m_src_cropped_seg, m_uv, 
-            m_src_mesh, m_src_vecR, m_src_vecT, m_src_K);
-    }
-
-    cv::Mat FaceSwap::debugTargetMesh()
-    {
-        cv::Mat uv = generateTextureCoordinates(m_dst_mesh, m_tgt_cropped_seg.size(),
-            m_vecR, m_vecT, m_K);
-        return debugMesh(m_tgt_cropped_img, m_tgt_cropped_seg, uv,
-            m_dst_mesh, m_vecR, m_vecT, m_K);
-    }
-
-    cv::Mat FaceSwap::debugMesh(const cv::Mat& img, const cv::Mat& seg,
-        const cv::Mat& uv, const Mesh& mesh,
-        const cv::Mat& vecR, const cv::Mat& vecT, const cv::Mat& K)
-    {
-        cv::Mat out;
-
-        // Create texture
-        cv::Mat tex(img.size(), CV_8UC3);
-        unsigned char* tex_data = tex.data;
-        int total_pixels = tex.total() * tex.channels();
-        for (int i = 0; i < total_pixels; ++i) *tex_data++ = 192;
-
-        // Add segmentation colors
-        if (!seg.empty())
-        {
-            cv::Vec3b* tex_data = (cv::Vec3b*)tex.data;
-            unsigned char* seg_data = seg.data;
-            for (int i = 0; i < tex.total(); ++i)
-            {
-                //if (*seg_data++ > 0)
-                if (seg.at<unsigned char>(i) > 0)
-                {
-                    (*tex_data)[0] = 0;
-                    (*tex_data)[1] = 0;
-                    (*tex_data)[2] = 240;
-                }
-                ++tex_data;
-            }
-        }
-
-        cv::Size tex_size(nextPow2(img.cols), nextPow2(img.rows));
-        cv::resize(tex, tex, tex_size, 0.0, 0.0, cv::INTER_CUBIC);
-
-        // Initialize mesh
-        Mesh tmp_mesh = mesh;
-        tmp_mesh.tex = tex;
-        tmp_mesh.uv = uv;
-        tmp_mesh.normals = computeVertexNormals(tmp_mesh);
-
-        // Render
-        m_face_renderer->init(img.cols, img.rows);
-        m_face_renderer->setProjection(K.at<float>(4));
-        m_face_renderer->setMesh(tmp_mesh);
-
-        cv::Mat pos_dir = (cv::Mat_<float>(4, 1) << -0.25f, -0.5f, -1, 0);
-        cv::Mat ambient = (cv::Mat_<float>(4, 1) << 0.3f, 0.3f, 0.3f, 1);
-        cv::Mat diffuse = (cv::Mat_<float>(4, 1) << 1.0f, 1.0f, 1.0f, 1);
-        m_face_renderer->setLight(pos_dir, ambient, diffuse);
-        m_face_renderer->render(vecR, vecT);
-        m_face_renderer->clearLight();
-
-        m_face_renderer->getFrameBuffer(out);
-
-        // Overwrite black pixels with original pixels
-        cv::Vec3b* out_data = (cv::Vec3b*)out.data;
-        for (int i = 0; i < out.total(); ++i)
-        {
-            unsigned char b = (*out_data)[0];
-            unsigned char g = (*out_data)[1];
-            unsigned char r = (*out_data)[2];
-            if (b == 0 && g == 0 && r == 0)
-                *out_data = img.at<cv::Vec3b>(i);
-            ++out_data;
-        }
-
-        return out;
-    }
-
-    cv::Mat FaceSwap::debugRender()
-    {
-        cv::Mat out = m_tgt_rendered_img.clone();
-
-        // Overwrite black pixels with original pixels
-        cv::Vec3b* out_data = (cv::Vec3b*)out.data;
-        for (int i = 0; i < out.total(); ++i)
-        {
-            unsigned char b = (*out_data)[0];
-            unsigned char g = (*out_data)[1];
-            unsigned char r = (*out_data)[2];
-            if (b == 0 && g == 0 && r == 0)
-                *out_data = m_target_img.at<cv::Vec3b>(i);
-            ++out_data;
-        }
-
-        return out;
     }
 
 }   // namespace face_swap

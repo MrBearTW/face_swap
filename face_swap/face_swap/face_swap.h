@@ -195,17 +195,6 @@ namespace face_swap
         cv::Mat getTargetImg();
         cv::Mat getTargetSeg();
         cv::Rect getTargetBbox();
-        cv::Mat debugSource();
-        cv::Mat debugTarget();
-        cv::Mat debug();
-        cv::Mat debugSourceMesh();
-        cv::Mat debugTargetMesh();
-        cv::Mat debugMesh(const cv::Mat& img, const cv::Mat& seg, 
-            const cv::Mat& uv, const Mesh& mesh,
-            const cv::Mat& vecR, const cv::Mat& vecT, const cv::Mat& K);
-        cv::Mat debugSourceLandmarks();
-        cv::Mat debugTargetLandmarks();
-        cv::Mat debugRender();
         /////////////
     };
 }   // namespace face_swap
