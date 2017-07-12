@@ -7,6 +7,7 @@ target_include_directories(pyfaceswap PRIVATE
 )
 set_target_properties(pyfaceswap PROPERTIES PREFIX "" OUTPUT_NAME "pyfaceswap")
 target_link_libraries(pyfaceswap PRIVATE
+    dlib
 	face_swap
 	${OpenCV_LIBS}
     ${PYTHON_LIBRARY}
