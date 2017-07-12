@@ -159,6 +159,7 @@ if __name__ == '__main__':
 
 
     renderThread = Renderer()
+    renderThread.setDaemon(True)
     renderThread.start()
     FsProcessor.startToListen(args.port)
 
