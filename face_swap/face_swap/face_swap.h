@@ -8,10 +8,6 @@
 // OpenCV
 #include <opencv2/core.hpp>
 
-// sfl
-#include <sfl/sequence_face_landmarks.h>
-#include <sfl/utilities.h>
-
 // face_seg
 #include <face_seg/face_seg.h>
 
@@ -160,7 +156,6 @@ namespace face_swap
             const cv::Mat& vecR, const cv::Mat& vecT, const cv::Mat& K);
 
     private:
-        std::shared_ptr<sfl::SequenceFaceLandmarks> m_sfl;
         std::unique_ptr<CNN3DMMExpr> m_cnn_3dmm_expr;
         std::unique_ptr<Basel3DMM> m_basel_3dmm;
         std::unique_ptr<FaceRenderer> m_face_renderer;

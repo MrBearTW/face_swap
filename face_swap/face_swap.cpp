@@ -524,34 +524,6 @@ namespace face_swap
         return m_target_bbox;
     }
 
-    cv::Mat FaceSwap::debugSource()
-    {
-        const float scale = 3.0f;
-        cv::Mat out = m_src_cropped_img.clone();
-        cv::Mat P = createPerspectiveProj3x4(m_src_vecR, m_src_vecT, m_src_K);
-        std::vector<cv::Point> scaled_landmarks(m_src_cropped_landmarks);
-        for (cv::Point& p : scaled_landmarks) p *= (int)scale;
-
-        // Render
-        renderWireframe(out, m_src_mesh, P, scale);
-        sfl::render(out, scaled_landmarks, false, cv::Scalar(0, 0, 255));
-        return out;
-    }
-
-    cv::Mat FaceSwap::debugTarget()
-    {
-        const float scale = 3.0f;
-        cv::Mat out = m_tgt_cropped_img.clone();
-        cv::Mat P = createPerspectiveProj3x4(m_vecR, m_vecT, m_K);
-        std::vector<cv::Point> scaled_landmarks(m_tgt_cropped_landmarks);
-        for (cv::Point& p : scaled_landmarks) p *= (int)scale;
-
-        // Render
-        renderWireframe(out, m_dst_mesh, P, scale);
-        sfl::render(out, scaled_landmarks, false, cv::Scalar(0, 0, 255));
-        return out;
-    }
-
     cv::Mat FaceSwap::debug()
     {
         cv::Mat src_d = debugSource();
@@ -647,20 +619,6 @@ namespace face_swap
             ++out_data;
         }
 
-        return out;
-    }
-
-    cv::Mat FaceSwap::debugSourceLandmarks()
-    {
-        cv::Mat out = m_source_img.clone();
-        sfl::render(out, m_src_landmarks);
-        return out;
-    }
-
-    cv::Mat FaceSwap::debugTargetLandmarks()
-    {
-        cv::Mat out = m_target_img.clone();
-        sfl::render(out, m_tgt_landmarks);
         return out;
     }
 
