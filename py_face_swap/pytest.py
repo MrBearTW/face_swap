@@ -36,7 +36,7 @@ def main():
         return
     start = time.time()
     for _ in range(iterNum):
-        if ( pfs.setTargetImg(targetImg, False) ):
+        if ( pfs.setTargetImg(targetImg, False, True) ):
             print 'Set Target Image Failed!'
             return
         result = pfs.swap()
