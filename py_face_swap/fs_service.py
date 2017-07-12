@@ -133,7 +133,12 @@ if __name__ == '__main__':
     reg_mean = '/root/face_swap/data/models/dfm_resnet_101_mean.binaryproto'         # path to 3DMM regression CNN mean file (.binaryproto)
     seg_model = '/root/face_swap/data/models/face_seg_fcn8s.caffemodel'                   # path to face segmentation CNN model file (.caffemodel)
     seg_deploy = '/root/face_swap/data/models/face_seg_fcn8s_deploy.prototxt'             # path to face segmentation CNN deploy file (.prototxt)
-    source = '/root/face_swap/data/images/brad_pitt_01.jpg'     # source image
+    sourceDir = '/root/face_swap/data/images/'
+
+    sources = ['brad_pitt_01.jpg', 'emma-stone.jpg', 'emma-watson.jpg', 'donald-trump.jpg',\
+            'chenwu.jpg', 'nick-young.jpg']
+
+    source = '%s/%s'%(sourceDir, sources(np.random.randint(0, len(sources), 1)))
 
     # Five global variables for synchronization
     g_init_track = True
