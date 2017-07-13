@@ -19,8 +19,22 @@ class PyFaceSwap {
     public:
         PyFaceSwap();
         ~PyFaceSwap();
+
+        /* 
+         * Create OpenGL context. Notice that only one context per process and only
+         * the thread that initializes the context can render
+         */
         int createCtx(int argc, PyObject *arglst);
+
         int setSourceImg(PyObject *pyImg);
+
+        /*
+         * bypass: if true, use the last stored 3DMM coefficients, pose, and segmentation
+         * init_tracker: if true, use dlib detection and initialize the tracker,
+         *               if false, use KCF tracking.
+         *     (One should always init_tracker before using the tracker. That is, one must
+         *     at least make init_tracker = true once.)
+         */
         int setTargetImg(PyObject *pyImg, bool bypass = false, bool init_tracker = true);
         PyObject* swap();
 
