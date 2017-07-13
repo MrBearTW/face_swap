@@ -52,10 +52,11 @@ void FaceServices2::init(int w, int h, float f)
     _k[5] = h / 2.0f;
 
     // Initialize shape and texture
-    if (faces.empty())
+    if (faces.empty()) {
         faces = festimator.getFaces() - 1;
-    cv::Mat shape = festimator.getShape(cv::Mat(99, 1, CV_32F));
-    tex = shape * 0 + 128;
+        shape = festimator.getShape(cv::Mat(99, 1, CV_32F));
+        tex = shape * 0 + 128;
+    }
 
     // Initialize image renderer
     // Rudy: I don't think we need this here.
