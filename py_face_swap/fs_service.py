@@ -137,7 +137,7 @@ if __name__ == '__main__':
             'chenwu.jpg', 'nick-young.jpg']
 
     source = '%s/%s'%(sourceDir, sources[np.random.randint(0, len(sources), 1)])
-    print 'Using source %s'%(source)
+    print 'Using source %s'%(sources[np.random.randint(0, len(sources), 1)])
 
     # Five global variables for synchronization
     g_init_track = True
