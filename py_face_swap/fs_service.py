@@ -1,3 +1,22 @@
+# Since rendering can only happen on one thread, current design
+# has one thread in charge of rendering.
+#
+# All the clients (connections) will first try to acquire semaphore,
+# and only one of them could get it.
+#
+# Once the client gets the semaphore, it sends the image to rendering thread
+# for further processing by `g_consumerEvent.set()` and it waits for the
+# result from the renderer by `g_producerEvent.wait()`. After it obtains
+# the result, it releases the semaphore.
+#
+# Once the renderer being notified by `g_consumerEvent.set()` it will pass
+# through `g_consumerEvent.wait()` and proceeds face swapping.
+# Once the renderer finishes swapping, it notify the client to pick it up
+# by `g_producerEvent.set()`
+# 
+# Notice that after the event is set by someone, we need to clear it
+# manually so that it gets block next time when it encounter wait().
+
 import argparse
 import random
 import threading
@@ -102,7 +121,7 @@ class Renderer(threading.Thread):
             sys.stderr.write('Set Source Image Failed!\n')
 
         while True:
-            ## Wait for lock
+            ## Wait for 
             sys.stderr.write('Waiting for Rendering...\n')
             g_consumerEvent.wait()
             g_consumerEvent.clear()
