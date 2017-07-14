@@ -178,8 +178,8 @@ if __name__ == '__main__':
         reg_model = '/root/face_swap/data/models/dfm_resnet_101.caffemodel'              # path to 3DMM regression CNN model file (.caffemodel)
         reg_deploy = '/root/face_swap/data/models/dfm_resnet_101_deploy.prototxt'        # path to 3DMM regression CNN deploy file (.prototxt)
     else:
-        print 'Low Quality Enabled! (101x180, VGG16)'
-        targetHeight = 180.0
+        print 'Low Quality Enabled! (180x320, VGG16)'
+        targetHeight = 320.0
         skipped = 0
         reg_model = '/root/face_swap/data/models/dfm_vgg16.caffemodel'              # path to 3DMM regression CNN model file (.caffemodel)
         reg_deploy = '/root/face_swap/data/models/dfm_vgg16_deploy.prototxt'        # path to 3DMM regression CNN deploy file (.prototxt)
