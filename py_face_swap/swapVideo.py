@@ -10,7 +10,7 @@ def main():
     parser.add_argument('-o', help='Output video', required=True)
     parser.add_argument('--idol', help='Source Idol', type=int, required=True, default=0)
     parser.add_argument('--gpu', help='GPU ID', type=int, required=True, default=0)
-    parser.add_argument('--rotate', help='Source Idol', type=int,required=True)
+    parser.add_argument('--rotate', help='Rotate 90 clockwise (used for movie from iphone)', type=int,required=True)
     parser.add_argument('--highQual', help='ResNet101 (or else VGG16)', type=int, required=True, default=0)
     parser.add_argument('--imgH', help='Image height', type=int, required=True)
     args = parser.parse_args()
