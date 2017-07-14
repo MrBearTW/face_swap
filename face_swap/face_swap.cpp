@@ -344,10 +344,10 @@ namespace face_swap
             ymax = ymin + sq_width - 1;
 
             // Limit to frame boundaries
-            xmin = std::max(0, xmin);
-            ymin = std::max(0, ymin);
-            xmax = std::min((int)frameSize.width - 1, xmax);
-            ymax = std::min((int)frameSize.height - 1, ymax);
+            xmin = xmin >= 0? xmin : 0;
+            ymin = ymin >= 0? ymin : 0;
+            xmax = xmax <= (int)frameSize.width - 1? xmax : (int)frameSize.width - 1;
+            ymax = ymax <= (int)frameSize.height - 1? ymax : (int)frameSize.height - 1;
         }
 
         return cv::Rect(cv::Point(xmin, ymin), cv::Point(xmax, ymax));
