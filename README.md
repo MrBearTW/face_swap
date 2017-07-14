@@ -41,6 +41,11 @@ The pipeline of the framework is modified into a more efficient one. Specificall
 ## Usage
 Please modify the path within `py_face_swap/pytest.py` before you run it.
 
+## Known Bugs
+1. When face is moving to or from the screen, bounding box does not grow or shrink accordingly properly.
+2. We count on failure pose estimation to detect the failure of tracking passively. One possible solution is to use discriminative tracker, e.g. [GOTURN](https://github.com/davheld/GOTURN)
+
+
 ## Related projects
 - [Face Swap](https://github.com/YuvalNirkin/face_swap), the original version
 - [Deep face segmentation](https://github.com/YuvalNirkin/face_segmentation), used to segment face regions in the face swapping pipeline.
