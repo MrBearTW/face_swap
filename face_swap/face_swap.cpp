@@ -219,6 +219,7 @@ namespace face_swap
     cv::Mat FaceSwap::swap()
     {
 #if DEBUG
+        int start_ms, end_ms;
         start_ms = duration_cast< milliseconds >(
             system_clock::now().time_since_epoch()
         ).count();
