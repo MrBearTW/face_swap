@@ -178,24 +178,51 @@ namespace face_swap
         /// Debug ///
         m_tgt_cropped_landmarks = cropped_landmarks;
         /////////////
+#if DEBUG
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
 
         // Calculate coefficients and pose
         if (!bypass) {
             m_cnn_3dmm_expr->process(cropped_img, cropped_landmarks, m_shape_coefficients,
                 m_tex_coefficients, m_expr_coefficients, m_vecR, m_vecT, m_K, bypass);
         }
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "C&P: " << (end_ms-start_ms) << " ms" << std::endl;
+#endif
     
+#if DEBUG
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
         // Create mesh
         m_dst_mesh = m_basel_3dmm->sample(m_shape_coefficients, m_tex_coefficients,
             m_expr_coefficients);
         m_dst_mesh.tex = m_tex;
         m_dst_mesh.uv = m_uv;
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "sampleMesh: " << (end_ms-start_ms) << " ms" << std::endl;
+#endif
 
         return true;
     }
 
     cv::Mat FaceSwap::swap()
     {
+#if DEBUG
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
         // Initialize renderer
         m_face_renderer->init(m_tgt_cropped_img.cols, m_tgt_cropped_img.rows);
         m_face_renderer->setProjection(m_K.at<float>(4));
@@ -212,7 +239,14 @@ namespace face_swap
 
         m_tgt_rendered_img = tgt_rendered_img;  // For debug
 
-        return blend(tgt_rendered_img, m_target_img, m_target_seg);
+        cv::Mat res = blend(tgt_rendered_img, m_target_img, m_target_seg);
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "swap: " << (end_ms-start_ms) << " ms" << std::endl;
+#endif
+        return res;
     }
 
     const Mesh & FaceSwap::getSourceMesh() const
@@ -239,7 +273,6 @@ namespace face_swap
         }
     }
 
-    // TODO
     void FaceSwap::extract_landmarks(const cv::Mat& frame, std::vector<cv::Point>& landmarks, bool init)
     {
         // Convert OpenCV's mat to dlib format 
@@ -272,7 +305,7 @@ namespace face_swap
         end_ms = duration_cast< milliseconds >(
             system_clock::now().time_since_epoch()
         ).count();
-        std::cout << "Face detection : " << (end_ms-start_ms) << " ms" << std::endl;
+        std::cout << "Face detection: " << (end_ms-start_ms) << " ms" << std::endl;
 #endif
 
 #if DEBUG
@@ -294,7 +327,7 @@ namespace face_swap
         end_ms = duration_cast< milliseconds >(
             system_clock::now().time_since_epoch()
         ).count();
-        std::cout << "Landmark detection : " << (end_ms-start_ms) << " ms" << std::endl;
+        std::cout << "Landmark detection: " << (end_ms-start_ms) << " ms" << std::endl;
 #endif
     }
 
@@ -357,7 +390,6 @@ namespace face_swap
         std::vector<cv::Point>& landmarks, std::vector<cv::Point>& cropped_landmarks,
         cv::Mat& cropped_img, cv::Mat& cropped_seg, cv::Rect& bbox, bool init_track)
     {
-        std::cout << "Enter Preprocess"  << std::endl;
 #if DEBUG
         int start_ms, end_ms;
 #endif

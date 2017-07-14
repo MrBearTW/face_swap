@@ -13,7 +13,7 @@
 // OpenCV
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>  // debug
-#define DEBUG 1
+#define DEBUG 0
 
 using namespace std::chrono;
 
@@ -62,7 +62,7 @@ namespace face_swap
         end_ms = duration_cast< milliseconds >(
             system_clock::now().time_since_epoch()
         ).count();
-        std::cout << "Shape, Tex, and Expr Regression: " << (end_ms-start_ms) << " ms" << std::endl;
+        std::cout << "Coef: " << (end_ms-start_ms) << " ms" << std::endl;
 #endif
 
         // Set up face service
@@ -80,8 +80,19 @@ namespace face_swap
             *lms_data++ = (float)landmarks[i].x;
             *lms_data++ = (float)landmarks[i].y;
         }
+#if DEBUG
+        start_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+#endif
 
         // Calculate pose
         fservice->estimatePose(img, LMs, shape_coefficients, vecR, vecT, K, m_highQual);
+#if DEBUG
+        end_ms = duration_cast< milliseconds >(
+            system_clock::now().time_since_epoch()
+        ).count();
+        std::cout << "Pose: " << (end_ms-start_ms) << " ms" << std::endl;
+#endif
     }
 }   // namespace face_swap
