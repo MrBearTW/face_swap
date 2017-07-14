@@ -172,13 +172,13 @@ if __name__ == '__main__':
     genericFace = 0
     highQual = args.highQual
     if highQual:
-        print 'High Quality Enabled! (360p, ResNet-101)'
-        targetHeight = 360.0
+        print 'High Quality Enabled! (360x640, ResNet-101)'
+        targetHeight = 640.0
         skipped = 0
         reg_model = '/root/face_swap/data/models/dfm_resnet_101.caffemodel'              # path to 3DMM regression CNN model file (.caffemodel)
         reg_deploy = '/root/face_swap/data/models/dfm_resnet_101_deploy.prototxt'        # path to 3DMM regression CNN deploy file (.prototxt)
     else:
-        print 'Low Quality Enabled! (180p, VGG16)'
+        print 'Low Quality Enabled! (101x180, VGG16)'
         targetHeight = 180.0
         skipped = 0
         reg_model = '/root/face_swap/data/models/dfm_vgg16.caffemodel'              # path to 3DMM regression CNN model file (.caffemodel)
