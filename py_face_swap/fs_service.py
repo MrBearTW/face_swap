@@ -142,6 +142,7 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=int, required=True)
     parser.add_argument('--gpu', type=int, required=True)
     parser.add_argument('--highQual', type=int, required=True)
+    parser.add_argument('--idol', type=int, required=True, default=0)
     args = parser.parse_args()
 
     landmarks = '/root/face_swap/data/models/shape_predictor_68_face_landmarks.dat'       # path to landmarks model file
@@ -155,8 +156,8 @@ if __name__ == '__main__':
     sources = ['brad_pitt_01.jpg', 'emma-stone.jpg', 'emma-watson.jpg', 'donald-trump.jpg',\
             'chenwu.jpg', 'nick-young.jpg']
 
-    source = '%s/%s'%(sourceDir, sources[np.random.randint(0, len(sources), 1)])
-    print 'Using source %s'%(sources[np.random.randint(0, len(sources), 1)])
+    source = '%s/%s'%(sourceDir, sources[args.idol])
+    print 'Using source %s'%(sources[args.idol])
 
     # Five global variables for synchronization
     g_init_track = True
