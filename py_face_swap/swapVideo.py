@@ -10,7 +10,7 @@ def main():
     parser.add_argument('-o', help='Output video', required=True)
     parser.add_argument('--idol', help='Source Idol', type=int, required=True, default=0)
     parser.add_argument('--gpu', help='GPU ID', type=int, required=True, default=0)
-    parser.add_argument('--rotate', help='Rotate 90 clockwise (used for movie from iphone)', type=int,required=True)
+    parser.add_argument('--rotate', help='Source Idol', type=int,required=True)
     parser.add_argument('--highQual', help='ResNet101 (or else VGG16)', type=int, required=True, default=0)
     parser.add_argument('--imgH', help='Image height', type=int, required=True)
     args = parser.parse_args()
@@ -78,7 +78,7 @@ def main():
             targetImg = cv2.rotate(targetImg, cv2.ROTATE_90_CLOCKWISE)
         print frame_id
         if ret:
-            tgtRszRatio = targetHeight / targetImg.shape[0]
+            tgtRszRatio = float(targetHeight) / targetImg.shape[0]
             rszTgtImg = cv2.resize(targetImg, None, None, fx=tgtRszRatio, fy=tgtRszRatio,\
                     interpolation=cv2.INTER_LINEAR)
             if ( not pfs.setTargetImg(rszTgtImg, False, failed) ):
