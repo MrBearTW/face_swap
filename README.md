@@ -1,3 +1,9 @@
+# Acknowledgement
+This work is done when the author is interning at **AILabs.tw**
+
+# Dockerized Image
+Please refer to [rudychin/face_swap_docker](https://github.com/RudyChin/face_swap_docker.git) for more detail
+
 # Fast Face Swap
 Inherit from [YuvalNirkin/face\_swap](https://github.com/YuvalNirkin/face_swap), this is a boosted version.
 
