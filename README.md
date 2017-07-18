@@ -1,5 +1,5 @@
 # Acknowledgement
-This work is done when the author is interning at **AILabs.tw**
+This work is done when the author was interning at **AILabs.tw**
 
 # Dockerized Image
 Please refer to [rudychin/face_swap_docker](https://github.com/RudyChin/face_swap_docker.git) for more detail
@@ -31,7 +31,6 @@ The pipeline of the framework is modified into a more efficient one. Specificall
 | [Qt](https://www.qt.io/)                                           | 5.4.0           |                                          |
 | [HDF5](https://support.hdfgroup.org/HDF5/)                         | 1.8.18          |                                          |
 | [KCFcpp](https://github.com/RudyChin/KCFcpp)                       | master          |                                          |
-| [yolo.so](https://github.com/RudyChin/yolo.so)               | so              |  The so branch.                          |
 
 ## Installation
     mkdir build
