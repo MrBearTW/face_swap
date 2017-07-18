@@ -31,7 +31,7 @@ The pipeline of the framework is modified into a more efficient one. Specificall
 | [Qt](https://www.qt.io/)                                           | 5.4.0           |                                          |
 | [HDF5](https://support.hdfgroup.org/HDF5/)                         | 1.8.18          |                                          |
 | [KCFcpp](https://github.com/RudyChin/KCFcpp)                       | master          |                                          |
-| [yolo.so](https://gitlab.corp.ailabs.tw/lab/py_yolo)               | so              |  The so branch.                          |
+| [yolo.so](https://github.com/RudyChin/yolo.so)               | so              |  The so branch.                          |
 
 ## Installation
     mkdir build
