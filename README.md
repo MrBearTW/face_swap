@@ -41,7 +41,7 @@ The pipeline of the framework is modified into a more efficient one. Specificall
 
 - Download the [landmarks model file](http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2)
 - Download the [face_seg_fcn8s.zip](https://github.com/YuvalNirkin/face_segmentation/releases/download/0.9/face_seg_fcn8s.zip)
-- dfm_cnn_resnet_101.zip is under `/data/rudychin/face-swap/data/models`
+- Download the [dfm_cnn_resnet_101](https://drive.google.com/file/d/0B8k2u9qYUPLcTVJGSVlES1Z6MVk/view?usp=sharing)
 
 ## Usage
 Please modify the path within `py_face_swap/pytest.py` before you run it.
