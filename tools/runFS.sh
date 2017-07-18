@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# README:
+# This is use to run several pre-defined videos (benchmarks) under various optimization techniques
+#
 # $1: 1(high qual), 0(low qual)
 # $2: GPU ID
 
