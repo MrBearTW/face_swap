@@ -8,8 +8,8 @@ The pipeline of the framework is modified into a more efficient one. Specificall
 
 - Replace dlib face detection in two ways:
 
-1. Use YOLO instead (please refer to the `ailabs` branch)
-2. Count on KCF tracking with dlib face detection (please refer to the `KCF` branch)
+1. Use YOLO instead (please refer to the `yolo` branch)
+2. Count on KCF tracking with dlib face detection (please refer to the `kcf` branch)
 
 - We make it a shared library and develop a python wrapper for the ease-of-use.
 
