@@ -20,7 +20,7 @@ def main():
         print 'Initialization failed!'
         return
     pfs.loadModels(landmarks, model_3dmm_h5, model_3dmm_dat, reg_model, reg_deploy,\
-            reg_mean, seg_model, seg_deploy, 0, 1, 0)
+            reg_mean, seg_model, seg_deploy, 0, 1, int(sys.argv[1]))
 
     sourceImg = cv2.imread(source)
     targetImg = cv2.imread(target)
