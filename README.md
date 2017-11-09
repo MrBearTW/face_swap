@@ -19,6 +19,10 @@ The pipeline of the framework is modified into a more efficient one. Specificall
 
 - We make it a shared library and develop a python wrapper for the ease-of-use.
 
+Compare the original performance and the accelerated version (SmallerNet + Tracking + Downsampling)
+![Original Performance Breakdown](./og_perf.png)
+![Acclerated Performance Breakdown](./kcf-dfm-vgg16-320.png)
+
 ## Dependencies
 | Library                                                            | Minimum Version | Notes                                    |
 |--------------------------------------------------------------------|-----------------|------------------------------------------|
