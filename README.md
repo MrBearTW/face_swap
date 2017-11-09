@@ -22,9 +22,10 @@ The pipeline of the framework is modified into a more efficient one. Specificall
 Compare the original performance and the accelerated version (SmallerNet + Tracking + Downsampling):
 
 ### Original Performance
-<img height="400" src="./og_perf.png">
+<img height="250" src="./og_perf.png">
+<img height="250" src="./kcf-dfm-vgg16-320.png">
+
 ### Acclerated Performance Breakdown
-<img height="400" src="./kcf-dfm-vgg16-320.png">
 
 ## Dependencies
 | Library                                                            | Minimum Version | Notes                                    |
