@@ -27,6 +27,9 @@ Compare the original performance and the accelerated version (SmallerNet + Track
 ### Acclerated Performance Breakdown
 <img height="400" src="./kcf-dfm-vgg16-320.png">
 
+### Compare KCF (slow detect + track, top row) to YOLO (fast detect, bottom row)
+<img height="400" src="./twoapproach.png">
+
 ## Dependencies
 | Library                                                            | Minimum Version | Notes                                    |
 |--------------------------------------------------------------------|-----------------|------------------------------------------|
